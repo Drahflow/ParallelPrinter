@@ -12,8 +12,8 @@ WorldInfo {
   basicTimeStep 0.1
 }
 Viewpoint {
-  orientation 0.016306430121519635 0.006795888762902203 -0.9998439459398725 1.7855296544176744
-  position 0.03281653579696833 0.4096470406534309 0.5129746116143575
+  orientation 0.011742035134289178 -0.00573184558580648 -0.9999146316346641 1.604772229296635
+  position -0.0042414649442976664 1.372801133553059 0.5011762443177222
 }
 TexturedBackground {
 }
@@ -35,81 +35,80 @@ Wall {
 }
 Robot {
   translation 0.4 0 0.9
-  rotation 6.106762428399225e-07 0.7071072811864377 0.70710628118604 3.14159
+  rotation 0 0.7071072811864377 0.70710628118604 3.14159
   children [
     Platform {
-      translation 0.39999997101801144 -0.4000119474312061 0.10878370304422004
-      rotation 0.017603853023420206 0.007303774284539381 -0.999818363123988 0.7855271304694141
+      translation 0.4 -0.4 0.1
+      rotation 0 0 -1 0.7855271304694141
       name "platform"
     }
     StrutRail {
       name "m1"
-      railStartpoint 0.1 0 0
-      railEndpoint 0.35 -0.25 0
-      strutEndpoint 0.39 -0.35 0.1
+      railEndpoint 0.25 -0.5 0
+      strutEndpoint 0.345 -0.4 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m2"
-      railStartpoint 0.7 0 0
-      railEndpoint 0.45 -0.25 0
-      strutEndpoint 0.41 -0.35 0.1
+      railStartpoint 0.1 0 0
+      railEndpoint 0.35 -0.5 0
+      strutEndpoint 0.365 -0.375 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m3"
-      railStartpoint 0 -0.1 0
-      railEndpoint 0.25 -0.35 0
-      strutEndpoint 0.35 -0.39 0.1
+      railStartpoint 0.2 0 0
+      railEndpoint 0.45 -0.5 0
+      strutEndpoint 0.39 -0.365 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m4"
-      railStartpoint 0.8 -0.1 0
-      railEndpoint 0.55 -0.35 0
-      strutEndpoint 0.45 -0.39 0.1
+      railStartpoint 0.6 0 0
+      railEndpoint 0.6 -0.5 0
+      strutEndpoint 0.41 -0.365 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m5"
-      railStartpoint 0 -0.7 0
-      railEndpoint 0.25 -0.45 0
-      strutEndpoint 0.35 -0.41 0.1
+      railStartpoint 0.7 0 0
+      railEndpoint 0.7 -0.5 0
+      strutEndpoint 0.435 -0.375 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m6"
-      railStartpoint 0.8 -0.7 0
-      railEndpoint 0.55 -0.45 0
-      strutEndpoint 0.45 -0.41 0.1
+      railStartpoint 0.8 0 0
+      railEndpoint 0.8 -0.5 0
+      strutEndpoint 0.455 -0.4 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m7"
-      railStartpoint 0.1 -0.8 0
-      railEndpoint 0.35 -0.55 0
-      strutEndpoint 0.39 -0.45 0.1
+      railStartpoint 0 -0.7 0
+      railEndpoint 0.7 -0.7 0
+      strutEndpoint 0.4 -0.425 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m8"
-      railStartpoint 0.7 -0.8 0
-      railEndpoint 0.45 -0.55 0
-      strutEndpoint 0.41 -0.45 0.1
+      railStartpoint 0 -0.8 0
+      railEndpoint 0.7 -0.8 0
+      strutEndpoint 0.4 -0.455 0.1
       attachedTo SolidReference {
         solidName "platform"
       }
