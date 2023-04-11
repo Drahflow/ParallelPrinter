@@ -1,0 +1,646 @@
+#VRML_SIM R2023a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/apartment_structure/protos/Wall.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Roughcast.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Plastic.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/CorrodedMetal.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/RoughPolymer.proto"
+
+WorldInfo {
+  basicTimeStep 0.1
+}
+Viewpoint {
+  orientation 0.10521662293150738 -0.7411377711813315 -0.6630567595517427 5.861495347132166
+  position -1.2350602274360845 -0.4732694997811775 0.9778180991928377
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  wallHeight 0.001
+}
+Wall {
+  translation 0.39 0 0
+  size 0.2 1 1
+  appearance Roughcast {
+    colorOverride 0.1 0.1 0.1
+    textureTransform TextureTransform {
+      scale 2.4 1
+    }
+  }
+}
+Robot {
+  translation 0.28 0.45 0
+  children [
+    Transform {
+      translation 0 0 0.95
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 -1 0
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m1"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -1
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 -0.21036774620197413 -0.13507557646703494
+                  rotation -1 0 0 0.9999999999999998
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.3
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.5
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 0 0.86
+      rotation 0 1 0 0
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 -0.5 -0.5
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m3"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            rotation 0 1 0 0
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -0.67
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 -0.1552464967591414 -0.1959554164702142
+                  rotation -1 0 0 0.6699999999999997
+                  children [
+                    DEF StrutTrans Transform {
+                      rotation 0 1 0 0.1
+                      children [
+                        Shape {
+                          appearance CorrodedMetal {
+                          }
+                          geometry DEF Strut Cylinder {
+                            height 0.5
+                            radius 0.005
+                          }
+                        }
+                      ]
+                    }
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.25
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                  ]
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(5)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 -0.9 0.86
+      rotation 0 1 0 0
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 0.5 -0.5
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m4"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position 0.82
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 0.14624440178693596 -0.136427912997052
+                  rotation 1 0 0 0.82
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.2
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.4
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(6)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 0 0.14
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 -0.5 0.5
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m5"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -2.41
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 -0.133627736699188 0.14880735359316732
+                  rotation -1 0 0 2.41
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.2
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.4
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(7)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 0 0.05
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 -1 0
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m7"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -2.2
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 -0.20212410095489752 0.14712527931383645
+                  rotation -1 0 0 2.2
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.3
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.5
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(2)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 0 0.05
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            position 0.9
+            axis 0 -1 0
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m8"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            translation 0 -0.9 0
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -4.1
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 0.20456927776610248 0.14370598663331724
+                  rotation -1 0 0 4.1
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.3
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.5
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(3)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 -0.9 0.14
+      rotation 0 1 0 0
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            axis 0 0.5 0.5
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m6"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position -3.8
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 0.15296447273567937 0.1977419279786037
+                  rotation -0.9999999999999999 0 0 3.8
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.3
+                      }
+                      endPoint SolidReference {
+                        solidName "Platform"
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.5
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(4)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0 0 0.95
+      children [
+        SliderJoint {
+          jointParameters JointParameters {
+            position 0.9
+            axis 0 -1 0
+            staticFriction 5
+          }
+          device [
+            LinearMotor {
+              name "m2"
+              maxForce 100
+            }
+          ]
+          endPoint Solid {
+            translation 0 -0.9 0
+            children [
+              BallJoint {
+                jointParameters BallJointParameters {
+                  anchor -0.025 0 0
+                }
+                jointParameters2 JointParameters {
+                  position 1
+                }
+                jointParameters3 JointParameters {
+                  axis 0 1 0
+                }
+                endPoint Solid {
+                  translation -0.025 0.21036774620197413 -0.13507557646703494
+                  rotation 1 0 0 0.9999999999999998
+                  children [
+                    BallJoint {
+                      jointParameters BallJointParameters {
+                        anchor -0.025 0 -0.3
+                      }
+                      endPoint Solid {
+                        translation -0.030000000000000027 -0.12 -0.37
+                        rotation -1 0 0 0.3926996938995746
+                        children [
+                          Shape {
+                            appearance RoughPolymer {
+                              baseColor 0 0.3 0.6
+                            }
+                            geometry DEF PlatformShape Box {
+                              size 0.01 0.2 0.3
+                            }
+                          }
+                        ]
+                        name "Platform"
+                        boundingObject USE PlatformShape
+                        physics Physics {
+                          density -1
+                          mass 1
+                        }
+                      }
+                    }
+                    Shape {
+                      appearance CorrodedMetal {
+                      }
+                      geometry DEF Strut Cylinder {
+                        height 0.5
+                        radius 0.005
+                      }
+                    }
+                  ]
+                  boundingObject USE Strut
+                  physics Physics {
+                    density -1
+                    mass 2
+                  }
+                }
+              }
+              Shape {
+                appearance Plastic {
+                  colorOverride 0.6 0 0
+                }
+                geometry DEF Slider Box {
+                  size 0.02 0.1 0.05
+                }
+              }
+            ]
+            name "solid(1)"
+            boundingObject USE Slider
+            physics Physics {
+            }
+            locked TRUE
+          }
+        }
+      ]
+    }
+  ]
+  name "printer"
+  controller "printer"
+}

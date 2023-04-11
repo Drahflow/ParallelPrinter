@@ -1,0 +1,162 @@
+#VRML_SIM R2023a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Asphalt.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/CorrodedMetal.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Copper.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/RoughPolymer.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/BrushedAluminium.proto"
+EXTERNPROTO "../protos/StrutRail.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/DamascusSteel.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/balls/protos/Ball.proto"
+
+WorldInfo {
+  basicTimeStep 1
+}
+Viewpoint {
+  orientation 0.2961521780450556 0.34156526040710383 -0.8919792936622446 2.013427917542109
+  position 1.5805681580657378 2.7235796783392168 1.875436636692961
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 4 4
+}
+Solid {
+  children [
+    SliderJoint {
+      jointParameters JointParameters {
+        axis 1 0 0
+        maxStop 1
+      }
+      endPoint Solid {
+        translation 0 0 0.03
+        children [
+          Shape {
+            appearance RoughPolymer {
+              baseColor 0.8 0.3 0
+            }
+            geometry Box {
+              size 0.1 0.08 0.04
+            }
+          }
+          BallJoint {
+            jointParameters BallJointParameters {
+              anchor 0 0 0.02
+            }
+            jointParameters2 JointParameters {
+            }
+            jointParameters3 JointParameters {
+            }
+            endPoint Solid {
+              translation 0.4 0 0.0199992
+              rotation 0 1 0 1.5708
+              children [
+                Shape {
+                  appearance BrushedAluminium {
+                  }
+                  geometry DEF Strut Cylinder {
+                    height 0.76
+                    radius 0.006
+                  }
+                }
+                BallJoint {
+                  jointParameters BallJointParameters {
+                    anchor 0 0 0.4
+                  }
+                  endPoint SolidReference {
+                  }
+                }
+              ]
+              boundingObject USE Strut
+            }
+          }
+        ]
+        name "Car"
+      }
+    }
+    Transform {
+      translation 0.5 0 0.025
+      rotation 0 1 0 1.5707996938995747
+      children [
+        Shape {
+          appearance Copper {
+          }
+          geometry Cylinder {
+            height 1.1
+            radius 0.008
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 1.1 0 0.025
+      children [
+        Shape {
+          appearance CorrodedMetal {
+          }
+          geometry Box {
+            size 0.1 0.05 0.05
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0.5 0 0
+      children [
+        Shape {
+          appearance Asphalt {
+          }
+          geometry Box {
+            size 1.1 0.1 0.02
+          }
+        }
+      ]
+    }
+  ]
+  name "Slider"
+}
+Ball {
+  translation 1 0.3 0.1
+  radius 0.019
+}
+Robot {
+  children [
+    StrutRail {
+      name "m1"
+      railStartpoint 0 1 0
+      railEndpoint 1 1 0
+      strutEndpoint 1 0.75 0.05
+      attachedTo Solid {
+        translation 0 0 -0.515
+        rotation -5.6143556605421057e-05 5.347708293266328e-05 0.9999999969940514 5.960464477539063e-08
+        children [
+          Shape {
+            appearance DamascusSteel {
+            }
+            geometry DEF ball Sphere {
+              radius 0.015
+            }
+          }
+        ]
+        name "platform"
+        boundingObject USE ball
+        physics Physics {
+        }
+      }
+    }
+    StrutRail {
+      name "m2"
+      railStartpoint 0 0.5 0
+      railEndpoint 1 0.3 0
+      strutEndpoint 1 0.75 0.05
+      attachedTo SolidReference {
+        solidName "platform"
+      }
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+#VRML_SIM R2023a utf8
+# A linear motor driving a triple hinged strut.
+# template language: javascript
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Asphalt.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/CorrodedMetal.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/Copper.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/RoughPolymer.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/BrushedAluminium.proto"
+
+PROTO StrutRail [
+  field SFString name "rail-driven strut"
+  field SFVec3f railStartpoint 0 0 0
+  field SFVec3f railEndpoint 1 0 0
+  field SFVec3f strutEndpoint 0.8 0 0.05
+  field SFNode attachedTo NULL
+  field SFFloat acceleration -1
+  field SFFloat consumptionFactor 10
+  field SFVec3f controlPID 10 0.1 0
+  field SFFloat maxVelocity 0.05
+  field SFFloat maxForce 250
+  field SFFloat multiplier 1
+  field SFString sound "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/default/worlds/sounds/linear_motor.wav"
+  field MFNode muscles [ ]
+]
+{
+  %<
+  import * as wbutility from 'wbutility.js';
+  import * as wbvector3 from 'wbvector3.js';
+  const startpoint = fields.railStartpoint.value;
+  const endpoint = fields.railEndpoint.value;
+  const startstrut = {x: startpoint.x, y: startpoint.y, z: 0.05};
+  const endstrut = fields.strutEndpoint.value;
+  const strutLen = wbvector3.distance(startstrut, endstrut);
+  const railLen = wbvector3.distance(startpoint, endpoint);
+  wbutility.info("strutLen: " + strutLen);
+  >%
+  Solid {
+    translation IS railStartpoint
+    children [
+      SliderJoint {
+        jointParameters JointParameters {
+          %<
+          const a = wbvector3.normalize(wbvector3.minus(endpoint, startpoint));
+          >%
+          axis %<= a.x >% %<= a.y >% %<= a.z >%
+          maxStop %<= railLen >%
+        }
+        device LinearMotor {
+          name IS name
+          acceleration IS acceleration
+          consumptionFactor IS consumptionFactor
+          controlPID IS controlPID
+          maxVelocity IS maxVelocity
+          minPosition 0
+          maxPosition %<= railLen >%
+          maxForce IS maxForce
+          multiplier IS multiplier
+          sound IS sound
+          muscles IS muscles
+        }
+        endPoint Solid {
+          translation 0 0 0.03
+          children [
+            Transform {
+              rotation 0 0 1 %<= Math.atan2(endpoint.y - startpoint.y, endpoint.x - startpoint.x) >%
+              children [
+                Shape {
+                  appearance RoughPolymer {
+                    baseColor 0.8 0.3 0
+                  }
+                  geometry Box {
+                    size 0.1 0.08 0.04
+                  }
+                }
+              ]
+            }
+            BallJoint {
+              jointParameters BallJointParameters {
+                anchor 0 0 0.02
+              }
+              jointParameters2 JointParameters {
+              }
+              jointParameters3 JointParameters {
+              }
+              endPoint Solid {
+                %<
+                const d = strutLen / 2;
+                const strutAxis = wbvector3.normalize(wbvector3.minus(endstrut, startstrut));
+                const initAxis = {x: 0, y: 0, z: 1};
+                const rot = wbvector3.cross(strutAxis, initAxis);
+                const angle = Math.atan2(endstrut.z - 0.05, strutLen);
+                const middle = wbvector3.add(
+                  wbvector3.minus(startstrut, startpoint),
+                  wbvector3.minus(endstrut, startpoint));
+                >%
+                translation %<= middle.x / 2 >% %<= middle.y / 2 >% %<= middle.z / 2 - 0.03 >%
+                rotation %<= rot.x >% %<= rot.y >% %<= rot.z >% %<= 1.5708 + angle >%
+                children [
+                  Transform {
+                    children [
+                      Shape {
+                        appearance BrushedAluminium {
+                        }
+                        geometry DEF Strut Cylinder {
+                          height %<= strutLen - 0.04 >%
+                          radius 0.006
+                        }
+                      }
+                    ]
+                  }
+                  BallJoint {
+                    jointParameters BallJointParameters {
+                      anchor 0 0 %<= -strutLen / 2 >%
+                    }
+                    jointParameters2 JointParameters {
+                    }
+                    jointParameters3 JointParameters {
+                    }
+                    endPoint IS attachedTo
+                  }
+                ]
+                boundingObject USE Strut
+                physics Physics {
+                }
+              }
+            }
+          ]
+          name "Car"
+          physics Physics {
+          }
+        }
+      }
+      Transform {
+        rotation 0 0 1 %<= Math.atan2(endpoint.y - startpoint.y, endpoint.x - startpoint.x) >%
+        children [
+          Transform {
+            translation %<= railLen / 2 >% 0 0.025
+            rotation 0 1 0 1.5707996938995747
+            children [
+              Shape {
+                appearance Copper {
+                }
+                geometry Cylinder {
+                  height %<= railLen + 0.1 >%
+                  radius 0.008
+                }
+              }
+            ]
+          }
+          Transform {
+            translation %<= railLen + 0.1 >% 0 0.025
+            children [
+              Shape {
+                appearance CorrodedMetal {
+                }
+                geometry Box {
+                  size 0.1 0.05 0.05
+                }
+              }
+            ]
+          }
+          Transform {
+            translation %<= railLen / 2 >% 0 0
+            children [
+              Shape {
+                appearance Asphalt {
+                }
+                geometry Box {
+                  size %<= railLen + 0.1 >% 0.1 0.02
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    name "Slider"
+  }
+}

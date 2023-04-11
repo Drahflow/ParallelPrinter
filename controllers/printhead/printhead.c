@@ -1,0 +1,215 @@
+/*
+ * File:          printhead.c
+ * Date:
+ * Description:
+ * Author:
+ * Modifications:
+ */
+
+/*
+ * You may need to add include files like <webots/distance_sensor.h> or
+ * <webots/motor.h>, etc.
+ */
+#include <webots/robot.h>
+#include <webots/motor.h>
+#include <webots/keyboard.h>
+#include <stdio.h>
+
+/*
+ * You may want to add macros here.
+ */
+#define TIME_STEP 64
+#define NUM_DRIVES 8
+
+typedef struct {
+  float x, y, z;
+} vec3;
+
+typedef struct {
+  vec3 s, e, a;
+  WbDeviceTag m;
+  vec3 r;
+  vec3 strut;
+  float sLen;
+  float rLen;
+} drive;
+
+typedef struct {
+  vec3 p;
+} platform;
+
+float dot(vec3 *a, vec3 *b) {
+  return a->x * b->x + a->y * b->y + a->z * b->z;
+}
+
+/*
+ * This is the main program.
+ * The arguments of the main function can be specified by the
+ * "controllerArgs" field of the Robot node
+ */
+int main(int argc, char **argv) {
+  /* necessary to initialize webots stuff */
+  wb_robot_init();
+  wb_keyboard_enable(100);
+
+  /*
+   * You should declare here WbDeviceTag variables for storing
+   * robot devices like this:
+   *  WbDeviceTag my_sensor = wb_robot_get_device("my_sensor");
+   *  WbDeviceTag my_actuator = wb_robot_get_device("my_actuator");
+   */
+  drive drives[NUM_DRIVES] = {
+    {
+      .s = { .x = 0.1, .y = 0, .z = 0, },
+      .e = { .x = 0.35, .y = -0.25, .z = 0, },
+      .a = { .x = 0.39, .y = -0.35, .z = 0.1, },
+      .m = wb_robot_get_device("m1"),
+    },
+    {
+      .s = { .x = 0.7, .y = 0, .z = 0, },
+      .e = { .x = 0.45, .y = -0.25, .z = 0, },
+      .a = { .x = 0.41, .y = -0.35, .z = 0.1, },
+      .m = wb_robot_get_device("m2"),
+    },
+    {
+      .s = { .x = 0, .y = -0.1, .z = 0, },
+      .e = { .x = 0.25, .y = -0.35, .z = 0, },
+      .a = { .x = 0.35, .y = -0.39, .z = 0.1, },
+      .m = wb_robot_get_device("m3"),
+    },
+    {
+      .s = { .x = 0.8, .y = -0.1, .z = 0, },
+      .e = { .x = 0.55, .y = -0.35, .z = 0, },
+      .a = { .x = 0.45, .y = -0.39, .z = 0.1, },
+      .m = wb_robot_get_device("m4"),
+    },
+    {
+      .s = { .x = 0, .y = -0.7, .z = 0, },
+      .e = { .x = 0.25, .y = -0.45, .z = 0, },
+      .a = { .x = 0.35, .y = -0.41, .z = 0.1, },
+      .m = wb_robot_get_device("m5"),
+    },
+    {
+      .s = { .x = 0.8, .y = -0.7, .z = 0, },
+      .e = { .x = 0.55, .y = -0.45, .z = 0, },
+      .a = { .x = 0.45, .y = -0.41, .z = 0.1, },
+      .m = wb_robot_get_device("m6"),
+    },
+    {
+      .s = { .x = 0.1, .y = -0.8, .z = 0, },
+      .e = { .x = 0.35, .y = -0.55, .z = 0, },
+      .a = { .x = 0.39, .y = -0.45, .z = 0.1, },
+      .m = wb_robot_get_device("m7"),
+    },
+    {
+      .s = { .x = 0.7, .y = -0.8, .z = 0, },
+      .e = { .x = 0.45, .y = -0.55, .z = 0, },
+      .a = { .x = 0.41, .y = -0.45, .z = 0.1, },
+      .m = wb_robot_get_device("m8"),
+    },
+  };
+
+  for(int i = 0; i < NUM_DRIVES; ++i) {
+    drives[i].r.x = drives[i].e.x - drives[i].s.x;
+    drives[i].r.y = drives[i].e.y - drives[i].s.y;
+    drives[i].r.z = drives[i].e.z - drives[i].s.z;
+
+    drives[i].rLen = sqrtf(dot(&drives[i].r, &drives[i].r));
+
+    drives[i].r.x /= drives[i].rLen;
+    drives[i].r.y /= drives[i].rLen;
+    drives[i].r.z /= drives[i].rLen;
+    
+    drives[i].strut.x = drives[i].a.x - drives[i].s.x;
+    drives[i].strut.y = drives[i].a.y - drives[i].s.y;
+    drives[i].strut.z = drives[i].a.z - drives[i].s.z;
+    
+    drives[i].sLen = sqrtf(dot(&drives[i].strut, &drives[i].strut));
+  }
+
+  platform initial = { .p = { .x = 0.4, .y = -0.4, .z = 0.1 }};
+  platform target = { .p = { .x = 0.4, .y = -0.4, .z = 0.1 }};
+
+  /* main loop
+   * Perform simulation steps of TIME_STEP milliseconds
+   * and leave the loop when the simulation is over
+   */
+  while (wb_robot_step(TIME_STEP) != -1) {
+    /*
+     * Read the sensors :
+     * Enter here functions to read sensor data, like:
+     *  double val = wb_distance_sensor_get_value(my_sensor);
+     */
+
+    /* Process sensor data here */
+
+    /*
+     * Enter here functions to send actuator commands, like:
+     * wb_motor_set_position(my_actuator, 10.0);
+     */
+    
+    printf("Target: %f,%f,%f\n", target.p.x, target.p.y, target.p.z);
+    
+    bool valid = true;
+    float positions[NUM_DRIVES];
+
+    for(int i = 0; i < NUM_DRIVES; ++i) {
+      vec3 d = {
+        .x = target.p.x + (drives[i].a.x - initial.p.x),
+        .y = target.p.y + (drives[i].a.y - initial.p.y),
+        .z = target.p.z + (drives[i].a.z - initial.p.z),
+      };
+
+      // TODO: Platform target rotation
+
+      d.x -= drives[i].s.x;
+      d.y -= drives[i].s.y;
+      d.z -= drives[i].s.z;
+
+      float dotDD = dot(&d, &d);
+      float dotRR = dot(&drives[i].r, &drives[i].r);
+      float dotDR = dot(&d, &drives[i].r);
+
+      float l1 = (dotDR - sqrtf(dotDR * dotDR - dotRR * (dotDD - drives[i].sLen * drives[i].sLen))) / dotRR;
+      float l2 = (dotDR + sqrtf(dotDR * dotDR - dotRR * (dotDD - drives[i].sLen * drives[i].sLen))) / dotRR;
+
+      printf("drive[%d]: %f / %f\n", i, l1, l2);
+      
+      if(0 <= l1 && l1 <= drives[i].rLen) {
+        positions[i] = l1;
+      } else {
+        printf("^^^^ No solution.\n");
+        valid = false;
+      }
+
+      if(0 < l2 && l2 <= drives[i].rLen) {
+        printf("^^^^ Second solution?\n");
+      }
+    }
+    
+    if(valid) {
+      for(int i = 0; i < NUM_DRIVES; ++i) {
+        wb_motor_set_position(drives[i].m, positions[i]);
+      }
+    }
+    
+    int k;
+    while((k = wb_keyboard_get_key()) != -1) {
+      if(k == 'A') target.p.x -= 0.005;
+      if(k == 'E') target.p.x += 0.005;
+      if(k == 'O') target.p.y -= 0.005;
+      if(k == ',') target.p.y += 0.005;
+      if(k == ';') target.p.z -= 0.005;
+      if(k == '.') target.p.z += 0.005;
+
+    }
+  };
+
+  /* Enter your cleanup code here */
+
+  /* This is necessary to cleanup webots resources */
+  wb_keyboard_disable();
+  wb_robot_cleanup();
+
+  return 0;
+}

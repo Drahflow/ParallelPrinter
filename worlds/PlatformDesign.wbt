@@ -1,0 +1,57 @@
+#VRML_SIM R2023a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/appearances/protos/ShinyLeather.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.11200887926681027 0.9663300409595046 0.23164684954601739 0.9279295307556078
+  position -0.17562653417379284 -0.06410934584527715 0.2619903428749623
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+}
+Solid {
+  translation 0 0 0.01
+  children [
+    DEF Base Group {
+      children [
+        Shape {
+          appearance DEF Mat ShinyLeather {
+            colorOverride 0.1 0 0.3
+            textureTransform TextureTransform {
+            }
+          }
+          geometry Box {
+            size 0.1 0.1 0.01
+          }
+        }
+        Transform {
+          translation 0.032 -0.032 0.025
+          rotation 0 0 1 0.785398
+          children [
+            Shape {
+              appearance DEF Mat ShinyLeather {
+                colorOverride 0.1 0 0.3
+                textureTransform TextureTransform {
+                }
+              }
+              geometry Box {
+                size 0.05 0.05 0.04
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+  boundingObject USE Base
+  physics Physics {
+  }
+}

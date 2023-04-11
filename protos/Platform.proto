@@ -1,0 +1,52 @@
+#VRML_SIM R2023a utf8
+# Describe the functionality of your PROTO here.
+# template language: javascript
+
+
+PROTO Platform [
+  field SFVec3f translation 0 0 0
+  field SFRotation rotation 0 0 1 0
+  field SFString name "solid"
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    children [
+      DEF Base Group {
+        children [
+          Shape {
+            appearance DEF Mat ShinyLeather {
+              colorOverride 0.2 0.2 0.7
+              textureTransform TextureTransform {
+              }
+            }
+            geometry Box {
+              size 0.1 0.1 0.01
+            }
+          }
+          Transform {
+            translation 0.032 -0.032 0.025
+            rotation 0 0 1 0.785398
+            children [
+              Shape {
+                appearance DEF Mat ShinyLeather {
+                  colorOverride 0.2 0.2 0.7
+                  textureTransform TextureTransform {
+                  }
+                }
+                geometry Box {
+                  size 0.05 0.05 0.04
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+    boundingObject USE Base
+    physics Physics {
+    }
+  }
+}
