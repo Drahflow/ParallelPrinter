@@ -37,6 +37,7 @@ typedef struct {
 
 typedef struct {
   vec3 p;
+  float alpha, beta, gamma;
 } platform;
 
 float dot(vec3 *a, vec3 *b) {
@@ -128,8 +129,18 @@ int main(int argc, char **argv) {
     drives[i].sLen = sqrtf(dot(&drives[i].strut, &drives[i].strut));
   }
 
-  platform initial = { .p = { .x = 0.35, .y = -0.7, .z = 0.1 }};
-  platform target = { .p = { .x = 0.35, .y = -0.7, .z = 0.1 }};
+  platform initial = {
+    .p = { .x = 0.35, .y = -0.7, .z = 0.1 },
+    .alpha = 0,
+    .beta = 0,
+    .gamma = 0,
+  };
+  platform target = {
+    .p = { .x = 0.35, .y = -0.7, .z = 0.1 },
+    .alpha = 0,
+    .beta = 0,
+    .gamma = 0,
+  };
 
   /* main loop
    * Perform simulation steps of TIME_STEP milliseconds
@@ -149,19 +160,41 @@ int main(int argc, char **argv) {
      * wb_motor_set_position(my_actuator, 10.0);
      */
     
-    printf("Target: %f,%f,%f\n", target.p.x, target.p.y, target.p.z);
+    printf("Target: %f,%f,%f %f %f %f\n", target.p.x, target.p.y, target.p.z, target.alpha, target.beta, target.gamma);
     
     bool valid = true;
     float positions[NUM_DRIVES];
 
     for(int i = 0; i < NUM_DRIVES; ++i) {
-      vec3 d = {
-        .x = target.p.x + (drives[i].a.x - initial.p.x),
-        .y = target.p.y + (drives[i].a.y - initial.p.y),
-        .z = target.p.z + (drives[i].a.z - initial.p.z),
+      vec3 d0 = {
+        .x = drives[i].a.x - initial.p.x,
+        .y = drives[i].a.y - initial.p.y,
+        .z = drives[i].a.z - initial.p.z,
       };
 
-      // TODO: Platform target rotation
+      vec3 d1 = {
+        .x = d0.x,
+        .y = cos(target.alpha) * d0.y - sin(target.alpha) * d0.z,
+        .z = sin(target.alpha) * d0.y + cos(target.alpha) * d0.z,
+      };
+
+      vec3 d2 = {
+        .x = cos(target.beta) * d1.x - sin(target.beta) * d1.y,
+        .y = sin(target.beta) * d1.x + cos(target.beta) * d1.y,
+        .z = d1.z,
+      };
+
+      vec3 d3 = {
+        .x = cos(target.gamma) * d2.x - sin(target.gamma) * d2.z,
+        .y = d2.y,
+        .z = sin(target.gamma) * d2.x + cos(target.gamma) * d2.z,
+      };
+
+      vec3 d = {
+        .x = target.p.x + d3.x,
+        .y = target.p.y + d3.y,
+        .z = target.p.z + d3.z,
+      };
 
       d.x -= drives[i].s.x;
       d.y -= drives[i].s.y;
@@ -202,6 +235,12 @@ int main(int argc, char **argv) {
       if(k == ',') target.p.y += 0.001;
       if(k == ';') target.p.z -= 0.001;
       if(k == '.') target.p.z += 0.001;
+      if(k == 'D') target.beta -= 0.01;
+      if(k == 'U') target.beta += 0.01;
+      if(k == 'Y') target.gamma -= 0.01;
+      if(k == 'I') target.gamma += 0.01;
+      if(k == 'P') target.alpha -= 0.01;
+      if(k == 'F') target.alpha += 0.01;
     }
   };
 

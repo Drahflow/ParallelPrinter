@@ -17,7 +17,7 @@ PROTO StrutRail [
   field SFFloat acceleration -1
   field SFFloat consumptionFactor 10
   field SFVec3f controlPID 10 0.1 0
-  field SFFloat maxVelocity 0.05
+  field SFFloat maxVelocity 0.1
   field SFFloat maxForce 250
   field SFFloat multiplier 1
   field SFString sound "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/default/worlds/sounds/linear_motor.wav"
