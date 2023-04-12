@@ -109,13 +109,13 @@ PROTO StrutRail [
                       }
                     ]
                   }
-                  BallJoint {
-                    jointParameters BallJointParameters {
+                  Hinge2Joint {
+                    jointParameters HingeJointParameters {
                       anchor 0 0 %<= -strutLen / 2 >%
+                      axis 0 1 0
                     }
                     jointParameters2 JointParameters {
-                    }
-                    jointParameters3 JointParameters {
+                      axis 1 0 0
                     }
                     endPoint IS attachedTo
                   }

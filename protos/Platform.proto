@@ -129,6 +129,8 @@ PROTO Platform [
     ]
     boundingObject USE Base
     physics Physics {
+      density -1
+      mass 0.5
     }
   }
 }

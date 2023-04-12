@@ -20,6 +20,7 @@
  */
 #define TIME_STEP 8
 #define NUM_DRIVES 8
+#define MAX_VELOCITY 0.05
 
 typedef struct {
   float x, y, z;
@@ -201,7 +202,6 @@ int main(int argc, char **argv) {
       if(k == ',') target.p.y += 0.001;
       if(k == ';') target.p.z -= 0.001;
       if(k == '.') target.p.z += 0.001;
-
     }
   };
 
