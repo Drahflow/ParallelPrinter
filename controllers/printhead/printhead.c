@@ -18,7 +18,7 @@
 /*
  * You may want to add macros here.
  */
-#define TIME_STEP 64
+#define TIME_STEP 8
 #define NUM_DRIVES 8
 
 typedef struct {
@@ -61,50 +61,50 @@ int main(int argc, char **argv) {
   drive drives[NUM_DRIVES] = {
     {
       .s = { .x = 0, .y = 0, .z = 0, },
-      .e = { .x = 0.25, .y = -0.5, .z = 0, },
-      .a = { .x = 0.345, .y = -0.4, .z = 0.1, },
+      .e = { .x = 0, .y = -0.7, .z = 0, },
+      .a = { .x = 0.2, .y = -0.75, .z = 0.2, },
       .m = wb_robot_get_device("m1"),
     },
     {
-      .s = { .x = 0.1, .y = 0, .z = 0, },
-      .e = { .x = 0.35, .y = -0.5, .z = 0, },
-      .a = { .x = 0.365, .y = -0.375, .z = 0.1, },
+      .s = { .x = 0.1, .y = -0.15, .z = 0, },
+      .e = { .x = 0.1, .y = -0.7, .z = 0, },
+      .a = { .x = 0.1, .y = -0.75, .z = 0.1, },
       .m = wb_robot_get_device("m2"),
     },
     {
-      .s = { .x = 0.2, .y = 0, .z = 0, },
-      .e = { .x = 0.45, .y = -0.5, .z = 0, },
-      .a = { .x = 0.39, .y = -0.365, .z = 0.1, },
+      .s = { .x = 0.2, .y = -0.05, .z = 0, },
+      .e = { .x = 0.2, .y = -0.7, .z = 0, },
+      .a = { .x = 0.2, .y = -0.7, .z = 0.1, },
       .m = wb_robot_get_device("m3"),
     },
     {
-      .s = { .x = 0.6, .y = 0, .z = 0, },
-      .e = { .x = 0.6, .y = -0.5, .z = 0, },
-      .a = { .x = 0.41, .y = -0.365, .z = 0.1, },
+      .s = { .x = 0.3, .y = 0, .z = 0, },
+      .e = { .x = 0.3, .y = -0.7, .z = 0, },
+      .a = { .x = 0.3, .y = -0.65, .z = 0.2, },
       .m = wb_robot_get_device("m4"),
     },
     {
-      .s = { .x = 0.7, .y = 0, .z = 0, },
-      .e = { .x = 0.7, .y = -0.5, .z = 0, },
-      .a = { .x = 0.435, .y = -0.375, .z = 0.1, },
+      .s = { .x = 0.4, .y = 0, .z = 0, },
+      .e = { .x = 0.4, .y = -0.7, .z = 0, },
+      .a = { .x = 0.4, .y = -0.65, .z = 0.2, },
       .m = wb_robot_get_device("m5"),
     },
     {
-      .s = { .x = 0.8, .y = 0, .z = 0, },
-      .e = { .x = 0.8, .y = -0.5, .z = 0, },
-      .a = { .x = 0.455, .y = -0.4, .z = 0.1, },
+      .s = { .x = 0.5, .y = -0.05, .z = 0, },
+      .e = { .x = 0.5, .y = -0.7, .z = 0, },
+      .a = { .x = 0.5, .y = -0.7, .z = 0.1, },
       .m = wb_robot_get_device("m6"),
     },
     {
-      .s = { .x = 0, .y = -0.7, .z = 0, },
-      .e = { .x = 0.7, .y = -0.7, .z = 0, },
-      .a = { .x = 0.4, .y = -0.425, .z = 0.1, },
+      .s = { .x = 0.6, .y = -0.15, .z = 0, },
+      .e = { .x = 0.6, .y = -0.7, .z = 0, },
+      .a = { .x = 0.6, .y = -0.75, .z = 0.1, },
       .m = wb_robot_get_device("m7"),
     },
     {
-      .s = { .x = 0, .y = -0.8, .z = 0, },
-      .e = { .x = 0.7, .y = -0.8, .z = 0, },
-      .a = { .x = 0.4, .y = -0.455, .z = 0.1, },
+      .s = { .x = 0.7, .y = 0, .z = 0, },
+      .e = { .x = 0.7, .y = -0.7, .z = 0, },
+      .a = { .x = 0.5, .y = -0.75, .z = 0.2, },
       .m = wb_robot_get_device("m8"),
     },
   };
@@ -127,8 +127,8 @@ int main(int argc, char **argv) {
     drives[i].sLen = sqrtf(dot(&drives[i].strut, &drives[i].strut));
   }
 
-  platform initial = { .p = { .x = 0.4, .y = -0.4, .z = 0.1 }};
-  platform target = { .p = { .x = 0.4, .y = -0.4, .z = 0.1 }};
+  platform initial = { .p = { .x = 0.35, .y = -0.7, .z = 0.1 }};
+  platform target = { .p = { .x = 0.35, .y = -0.7, .z = 0.1 }};
 
   /* main loop
    * Perform simulation steps of TIME_STEP milliseconds
@@ -195,12 +195,12 @@ int main(int argc, char **argv) {
     
     int k;
     while((k = wb_keyboard_get_key()) != -1) {
-      if(k == 'A') target.p.x -= 0.005;
-      if(k == 'E') target.p.x += 0.005;
-      if(k == 'O') target.p.y -= 0.005;
-      if(k == ',') target.p.y += 0.005;
-      if(k == ';') target.p.z -= 0.005;
-      if(k == '.') target.p.z += 0.005;
+      if(k == 'A') target.p.x -= 0.001;
+      if(k == 'E') target.p.x += 0.001;
+      if(k == 'O') target.p.y -= 0.001;
+      if(k == ',') target.p.y += 0.001;
+      if(k == ';') target.p.z -= 0.001;
+      if(k == '.') target.p.z += 0.001;
 
     }
   };
