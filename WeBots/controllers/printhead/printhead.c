@@ -262,14 +262,14 @@ int main(int argc, char **argv) {
       if(k == 'P') target.alpha -= 0.01;
       if(k == 'F') target.alpha += 0.01;
 
-      if((k & 0xff) == '0') drives[0].fromBelow = !drives[0].fromBelow;
-      if((k & 0xff) == '1') drives[1].fromBelow = !drives[1].fromBelow;
-      if((k & 0xff) == '2') drives[2].fromBelow = !drives[2].fromBelow;
-      if((k & 0xff) == '3') drives[3].fromBelow = !drives[3].fromBelow;
-      if((k & 0xff) == '4') drives[4].fromBelow = !drives[4].fromBelow;
-      if((k & 0xff) == '5') drives[5].fromBelow = !drives[5].fromBelow;
-      if((k & 0xff) == '6') drives[6].fromBelow = !drives[6].fromBelow;
-      if((k & 0xff) == '7') drives[7].fromBelow = !drives[7].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '0') drives[0].fromBelow = !drives[0].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '1') drives[1].fromBelow = !drives[1].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '2') drives[2].fromBelow = !drives[2].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '3') drives[3].fromBelow = !drives[3].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '4') drives[4].fromBelow = !drives[4].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '5') drives[5].fromBelow = !drives[5].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '6') drives[6].fromBelow = !drives[6].fromBelow;
+      if((k & WB_KEYBOARD_KEY) == '7') drives[7].fromBelow = !drives[7].fromBelow;
     }
   };
 
