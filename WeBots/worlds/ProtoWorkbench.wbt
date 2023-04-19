@@ -16,8 +16,8 @@ WorldInfo {
   basicTimeStep 1
 }
 Viewpoint {
-  orientation 0.2961521780450556 0.34156526040710383 -0.8919792936622446 2.013427917542109
-  position 1.5805681580657378 2.7235796783392168 1.875436636692961
+  orientation 0.21214839485943562 0.20304649915519532 -0.9559106536383954 2.308172121649763
+  position 1.354864388651037 1.1887749530799079 0.6317722972616663
 }
 TexturedBackground {
 }
@@ -130,9 +130,10 @@ Robot {
       name "m1"
       railStartpoint 0 1 0
       railEndpoint 1 1 0
+      motorPosition 0.2
       strutEndpoint 1 0.75 0.05
       attachedTo Solid {
-        translation 0 0 -0.515
+        translation 2.86874e-13 3.01177e-13 -0.425
         rotation -5.6143556605421057e-05 5.347708293266328e-05 0.9999999969940514 5.960464477539063e-08
         children [
           Shape {

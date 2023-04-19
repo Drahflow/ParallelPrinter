@@ -12,6 +12,7 @@ PROTO StrutRail [
   field SFString name "rail-driven strut"
   field SFVec3f railStartpoint 0 0 0
   field SFVec3f railEndpoint 1 0 0
+  field SFFloat motorPosition 0
   field SFVec3f strutEndpoint 0.8 0 0.05
   field SFNode attachedTo NULL
   field SFFloat acceleration -1
@@ -29,7 +30,13 @@ PROTO StrutRail [
   import * as wbvector3 from 'wbvector3.js';
   const startpoint = fields.railStartpoint.value;
   const endpoint = fields.railEndpoint.value;
-  const startstrut = {x: startpoint.x, y: startpoint.y, z: 0.05};
+  const axis = wbvector3.normalize(wbvector3.minus(endpoint, startpoint));
+  const motorPosition = fields.motorPosition.value;
+  const startstrut = {
+    x: startpoint.x + motorPosition * axis.x,
+    y: startpoint.y + motorPosition * axis.y,
+    z: 0.05 + motorPosition * axis.z,
+  };
   const endstrut = fields.strutEndpoint.value;
   const strutLen = wbvector3.distance(startstrut, endstrut);
   const railLen = wbvector3.distance(startpoint, endpoint);
@@ -40,10 +47,8 @@ PROTO StrutRail [
     children [
       SliderJoint {
         jointParameters JointParameters {
-          %<
-          const a = wbvector3.normalize(wbvector3.minus(endpoint, startpoint));
-          >%
-          axis %<= a.x >% %<= a.y >% %<= a.z >%
+          position IS motorPosition
+          axis %<= axis.x >% %<= axis.y >% %<= axis.z >%
           maxStop %<= railLen >%
         }
         device LinearMotor {
@@ -60,7 +65,7 @@ PROTO StrutRail [
           muscles IS muscles
         }
         endPoint Solid {
-          translation 0 0 0.03
+          translation %<= axis.x * motorPosition >% %<= axis.y * motorPosition >% %<= axis.z * motorPosition + 0.03 >%
           children [
             Transform {
               rotation 0 0 1 %<= Math.atan2(endpoint.y - startpoint.y, endpoint.x - startpoint.x) >%
@@ -90,11 +95,8 @@ PROTO StrutRail [
                 const initAxis = {x: 0, y: 0, z: 1};
                 const rot = wbvector3.cross(strutAxis, initAxis);
                 const angle = Math.atan2(endstrut.z - 0.05, strutLen);
-                const middle = wbvector3.add(
-                  wbvector3.minus(startstrut, startpoint),
-                  wbvector3.minus(endstrut, startpoint));
                 >%
-                translation %<= middle.x / 2 >% %<= middle.y / 2 >% %<= middle.z / 2 - 0.03 >%
+                translation %<= strutAxis.x * d >% %<= strutAxis.y * d >% %<= strutAxis.z * d + 0.02 >%
                 rotation %<= rot.x >% %<= rot.y >% %<= rot.z >% %<= 1.5708 + angle >%
                 children [
                   Transform {
