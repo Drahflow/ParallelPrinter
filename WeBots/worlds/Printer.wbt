@@ -25,7 +25,7 @@ Floor {
 }
 Wall {
   translation 0.05 -0.05 0
-  size 0.9 0.1 1
+  size 0.9 0.1 1.2
   appearance Roughcast {
     colorOverride 0.1 0.1 0.1
     textureTransform TextureTransform {
@@ -34,36 +34,40 @@ Wall {
   }
 }
 Robot {
-  translation 0.4 0 0.9
+  translation 0.4 0 1.1
   rotation 0 0.7071072811864377 0.70710628118604 3.14159
   children [
     Platform {
-      translation 0.35 -0.7 0.1
+      translation 0.35 -0.95 0.175
       rotation 0 0 1 0
       name "platform"
     }
     StrutRail {
       name "m1"
-      railEndpoint 0 -0.7 0
-      strutEndpoint 0.2 -0.75 0.2
+      railStartpoint 0 0 0
+      railEndpoint 0 -0.9 0
+      motorPosition 0.075
+      strutEndpoint 0.1 -0.9915151 0.15
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m2"
-      railStartpoint 0.1 -0.15 0
-      railEndpoint 0.1 -0.7 0
-      strutEndpoint 0.1 -0.75 0.1
+      railStartpoint 0.1 0 0
+      railEndpoint 0.1 -0.9 0
+      motorPosition 0.05
+      strutEndpoint 0.2 -0.95 0.25
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m3"
-      railStartpoint 0.2 -0.05 0
-      railEndpoint 0.2 -0.7 0
-      strutEndpoint 0.2 -0.7 0.1
+      railStartpoint 0.2 0 0
+      railEndpoint 0.2 -0.9 0
+      motorPosition 0.1
+      strutEndpoint 0.3 -1.0165151 0.15
       attachedTo SolidReference {
         solidName "platform"
       }
@@ -71,8 +75,8 @@ Robot {
     StrutRail {
       name "m4"
       railStartpoint 0.3 0 0
-      railEndpoint 0.3 -0.7 0
-      strutEndpoint 0.3 -0.65 0.2
+      railEndpoint 0.3 -0.9 0
+      strutEndpoint 0.3 -0.905538 0.25
       attachedTo SolidReference {
         solidName "platform"
       }
@@ -80,26 +84,28 @@ Robot {
     StrutRail {
       name "m5"
       railStartpoint 0.4 0 0
-      railEndpoint 0.4 -0.7 0
-      strutEndpoint 0.4 -0.65 0.2
+      railEndpoint 0.4 -0.9 0
+      strutEndpoint 0.4 -0.905538 0.25
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m6"
-      railStartpoint 0.5 -0.05 0
-      railEndpoint 0.5 -0.7 0
-      strutEndpoint 0.5 -0.7 0.1
+      railStartpoint 0.5 -0.0 0
+      railEndpoint 0.5 -0.9 0
+      motorPosition 0.1
+      strutEndpoint 0.4 -1.0165151 0.15
       attachedTo SolidReference {
         solidName "platform"
       }
     }
     StrutRail {
       name "m7"
-      railStartpoint 0.6 -0.15 0
-      railEndpoint 0.6 -0.7 0
-      strutEndpoint 0.6 -0.75 0.1
+      railStartpoint 0.6 0 0
+      railEndpoint 0.6 -0.9 0
+      motorPosition 0.05
+      strutEndpoint 0.5 -0.95 0.25
       attachedTo SolidReference {
         solidName "platform"
       }
@@ -107,8 +113,9 @@ Robot {
     StrutRail {
       name "m8"
       railStartpoint 0.7 0 0
-      railEndpoint 0.7 -0.7 0
-      strutEndpoint 0.5 -0.75 0.2
+      railEndpoint 0.7 -0.9 0
+      motorPosition 0.075
+      strutEndpoint 0.6 -0.9915151 0.15
       attachedTo SolidReference {
         solidName "platform"
       }

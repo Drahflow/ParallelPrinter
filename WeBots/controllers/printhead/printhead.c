@@ -28,6 +28,7 @@ typedef struct {
 
 typedef struct {
   vec3 s, e, a;
+  float mp;
   WbDeviceTag m;
   vec3 r;
   vec3 strut;
@@ -61,52 +62,60 @@ int main(int argc, char **argv) {
    *  WbDeviceTag my_actuator = wb_robot_get_device("my_actuator");
    */
   drive drives[NUM_DRIVES] = {
-    {
-      .s = { .x = 0, .y = 0, .z = 0, },
-      .e = { .x = 0, .y = -0.7, .z = 0, },
-      .a = { .x = 0.2, .y = -0.75, .z = 0.2, },
+    { // m1
+      .s = { .x = 0, .y = 0, .z = 0.05, },
+      .e = { .x = 0, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.1, .y = -0.9915151, .z = 0.15, },
+      .mp = 0.075,
       .m = wb_robot_get_device("m1"),
     },
-    {
-      .s = { .x = 0.1, .y = -0.15, .z = 0, },
-      .e = { .x = 0.1, .y = -0.7, .z = 0, },
-      .a = { .x = 0.1, .y = -0.75, .z = 0.1, },
+    { // m2
+      .s = { .x = 0.1, .y = 0, .z = 0.05, },
+      .e = { .x = 0.1, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.2, .y = -0.95, .z = 0.25, },
+      .mp = 0.05,
       .m = wb_robot_get_device("m2"),
     },
-    {
-      .s = { .x = 0.2, .y = -0.05, .z = 0, },
-      .e = { .x = 0.2, .y = -0.7, .z = 0, },
-      .a = { .x = 0.2, .y = -0.7, .z = 0.1, },
+    { // m3
+      .s = { .x = 0.2, .y = 0, .z = 0.05, },
+      .e = { .x = 0.2, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.3, .y = -1.0165151, .z = 0.15, },
+      .mp = 0.1,
       .m = wb_robot_get_device("m3"),
     },
-    {
-      .s = { .x = 0.3, .y = 0, .z = 0, },
-      .e = { .x = 0.3, .y = -0.7, .z = 0, },
-      .a = { .x = 0.3, .y = -0.65, .z = 0.2, },
+    { // m4
+      .s = { .x = 0.3, .y = 0, .z = 0.05, },
+      .e = { .x = 0.3, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.3, .y = -0.905538, .z = 0.25, },
+      .mp = 0,
       .m = wb_robot_get_device("m4"),
     },
-    {
-      .s = { .x = 0.4, .y = 0, .z = 0, },
-      .e = { .x = 0.4, .y = -0.7, .z = 0, },
-      .a = { .x = 0.4, .y = -0.65, .z = 0.2, },
+    { // m5
+      .s = { .x = 0.4, .y = 0, .z = 0.05, },
+      .e = { .x = 0.4, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.4, .y = -0.905538, .z = 0.25, },
+      .mp = 0,
       .m = wb_robot_get_device("m5"),
     },
-    {
-      .s = { .x = 0.5, .y = -0.05, .z = 0, },
-      .e = { .x = 0.5, .y = -0.7, .z = 0, },
-      .a = { .x = 0.5, .y = -0.7, .z = 0.1, },
+    { // m6
+      .s = { .x = 0.5, .y = 0, .z = 0.05, },
+      .e = { .x = 0.5, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.4, .y = -1.0165151, .z = 0.15, },
+      .mp = 0.1,
       .m = wb_robot_get_device("m6"),
     },
-    {
-      .s = { .x = 0.6, .y = -0.15, .z = 0, },
-      .e = { .x = 0.6, .y = -0.7, .z = 0, },
-      .a = { .x = 0.6, .y = -0.75, .z = 0.1, },
+    { // m7
+      .s = { .x = 0.6, .y = 0, .z = 0.05, },
+      .e = { .x = 0.6, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.5, .y = -0.95, .z = 0.25, },
+      .mp = 0.05,
       .m = wb_robot_get_device("m7"),
     },
-    {
-      .s = { .x = 0.7, .y = 0, .z = 0, },
-      .e = { .x = 0.7, .y = -0.7, .z = 0, },
-      .a = { .x = 0.5, .y = -0.75, .z = 0.2, },
+    { // m8
+      .s = { .x = 0.7, .y = 0, .z = 0.05, },
+      .e = { .x = 0.7, .y = -0.9, .z = 0.05, },
+      .a = { .x = 0.6, .y = -0.9915151, .z = 0.15, },
+      .mp = 0.075,
       .m = wb_robot_get_device("m8"),
     },
   };
@@ -122,21 +131,21 @@ int main(int argc, char **argv) {
     drives[i].r.y /= drives[i].rLen;
     drives[i].r.z /= drives[i].rLen;
     
-    drives[i].strut.x = drives[i].a.x - drives[i].s.x;
-    drives[i].strut.y = drives[i].a.y - drives[i].s.y;
-    drives[i].strut.z = drives[i].a.z - drives[i].s.z;
+    drives[i].strut.x = drives[i].a.x - drives[i].s.x - drives[i].mp * drives[i].r.x;
+    drives[i].strut.y = drives[i].a.y - drives[i].s.y - drives[i].mp * drives[i].r.y;
+    drives[i].strut.z = drives[i].a.z - drives[i].s.z - drives[i].mp * drives[i].r.z;
     
     drives[i].sLen = sqrtf(dot(&drives[i].strut, &drives[i].strut));
   }
 
   platform initial = {
-    .p = { .x = 0.35, .y = -0.7, .z = 0.1 },
+    .p = { .x = 0.35, .y = -0.95, .z = 0.15 },
     .alpha = 0,
     .beta = 0,
     .gamma = 0,
   };
   platform target = {
-    .p = { .x = 0.35, .y = -0.7, .z = 0.1 },
+    .p = { .x = 0.35, .y = -0.95, .z = 0.15 },
     .alpha = 0,
     .beta = 0,
     .gamma = 0,
