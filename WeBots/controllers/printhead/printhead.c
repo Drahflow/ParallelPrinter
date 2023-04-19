@@ -34,6 +34,7 @@ typedef struct {
   vec3 strut;
   float sLen;
   float rLen;
+  bool fromBelow;
 } drive;
 
 typedef struct {
@@ -136,6 +137,7 @@ int main(int argc, char **argv) {
     drives[i].strut.z = drives[i].a.z - drives[i].s.z - drives[i].mp * drives[i].r.z;
     
     drives[i].sLen = sqrtf(dot(&drives[i].strut, &drives[i].strut));
+    drives[i].fromBelow = false;
   }
 
   platform initial = {
@@ -216,17 +218,26 @@ int main(int argc, char **argv) {
       float l1 = (dotDR - sqrtf(dotDR * dotDR - dotRR * (dotDD - drives[i].sLen * drives[i].sLen))) / dotRR;
       float l2 = (dotDR + sqrtf(dotDR * dotDR - dotRR * (dotDD - drives[i].sLen * drives[i].sLen))) / dotRR;
 
-      printf("drive[%d]: %f / %f\n", i, l1, l2);
+      printf("drive[%d]: %c%f / %c%f\n", i, drives[i].fromBelow? ' ': '*', l1, drives[i].fromBelow? '*': ' ', l2);
       
-      if(0 <= l1 && l1 <= drives[i].rLen) {
-        positions[i] = l1;
-      } else {
-        printf("^^^^ No solution.\n");
-        valid = false;
+      if(0 <= l1 && l1 <= drives[i].rLen && 0 <= l2 && l2 <= drives[i].rLen) {
+        printf("^^^^ Two solutions\n");
       }
 
-      if(0 < l2 && l2 <= drives[i].rLen) {
-        printf("^^^^ Second solution?\n");
+      if(!drives[i].fromBelow) {
+        if(0 <= l1 && l1 <= drives[i].rLen) {
+          positions[i] = l1;
+        } else {
+          printf("^^^^ No solution.\n");
+          valid = false;
+        }
+      } else {
+        if(0 <= l2 && l2 <= drives[i].rLen) {
+          positions[i] = l2;
+        } else {
+          printf("^^^^ No solution.\n");
+          valid = false;
+        }
       }
     }
     
@@ -250,6 +261,15 @@ int main(int argc, char **argv) {
       if(k == 'I') target.gamma += 0.01;
       if(k == 'P') target.alpha -= 0.01;
       if(k == 'F') target.alpha += 0.01;
+
+      if((k & 0xff) == '0') drives[0].fromBelow = !drives[0].fromBelow;
+      if((k & 0xff) == '1') drives[1].fromBelow = !drives[1].fromBelow;
+      if((k & 0xff) == '2') drives[2].fromBelow = !drives[2].fromBelow;
+      if((k & 0xff) == '3') drives[3].fromBelow = !drives[3].fromBelow;
+      if((k & 0xff) == '4') drives[4].fromBelow = !drives[4].fromBelow;
+      if((k & 0xff) == '5') drives[5].fromBelow = !drives[5].fromBelow;
+      if((k & 0xff) == '6') drives[6].fromBelow = !drives[6].fromBelow;
+      if((k & 0xff) == '7') drives[7].fromBelow = !drives[7].fromBelow;
     }
   };
 
