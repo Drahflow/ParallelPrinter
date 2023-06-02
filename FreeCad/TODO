@@ -1,1 +1,4 @@
 * Increase Screw Tool clearances on SliderBottom
+* Add optical end position fixture on SliderBottom
+* Increase Screw Tool clearances on SliderNutFixture
+* Increase Fastener Nut clearance (along axis) on SliderNutFixture
