@@ -883,7 +883,6 @@ usbserial_get_serialid(void)
 static void
 usb_req_get_descriptor(struct usb_ctrlrequest *req)
 {
-    beep_error = 5;
     if (req->bRequestType != USB_DIR_IN)
         goto fail;
     void *desc = NULL;
@@ -921,7 +920,6 @@ fail:
 static void
 usb_req_set_address(struct usb_ctrlrequest *req)
 {
-  beep_error = 6;
     if (req->bRequestType || req->wIndex || req->wLength) {
         usb_do_stall();
         return;
@@ -932,7 +930,6 @@ usb_req_set_address(struct usb_ctrlrequest *req)
 static void
 usb_req_set_configuration(struct usb_ctrlrequest *req)
 {
-  beep_error = 7;
     if (req->bRequestType || req->wValue != 1 || req->wIndex || req->wLength) {
         usb_do_stall();
         return;
@@ -1000,7 +997,6 @@ check_reboot(void)
 static void
 usb_req_set_line_coding(struct usb_ctrlrequest *req)
 {
-    beep_error = 8;
     if (req->bRequestType != 0x21 || req->wValue || req->wIndex
         || req->wLength != sizeof(line_coding)) {
         usb_do_stall();
@@ -1013,7 +1009,6 @@ usb_req_set_line_coding(struct usb_ctrlrequest *req)
 static void
 usb_req_get_line_coding(struct usb_ctrlrequest *req)
 {
-  beep_error = 9;
     if (req->bRequestType != 0xa1 || req->wValue || req->wIndex
         || req->wLength < sizeof(line_coding)) {
         usb_do_stall();
@@ -1025,7 +1020,6 @@ usb_req_get_line_coding(struct usb_ctrlrequest *req)
 static void
 usb_req_set_line(struct usb_ctrlrequest *req)
 {
-  beep_error = 10;
     if (req->bRequestType != 0x21 || req->wIndex || req->wLength) {
         usb_do_stall();
         return;
@@ -1038,7 +1032,6 @@ usb_req_set_line(struct usb_ctrlrequest *req)
 static void
 usb_state_ready(void)
 {
-    beep_error = 4;
     struct usb_ctrlrequest req;
     int_fast8_t ret = usb_read_ep0_setup(&req, sizeof(req));
     if (ret != sizeof(req))
@@ -1059,7 +1052,6 @@ static uint8_t receive_buf[128], receive_pos;
 
 void usb_ep0_task(void)
 {
-    beep_error = 1;
     if (usb_xfer_flags)
         usb_do_xfer(usb_xfer_data, usb_xfer_size, usb_xfer_flags);
     else
@@ -1069,7 +1061,6 @@ void usb_ep0_task(void)
 void
 usb_bulk_in_task(void)
 {
-    beep_error = 2;
     uint_fast8_t tpos = transmit_pos;
     if (!tpos)
         return;
@@ -1089,7 +1080,6 @@ usb_bulk_in_task(void)
 void
 usb_bulk_out_task(void)
 {
-    beep_error = 3;
     // Read data
     uint_fast8_t rpos = receive_pos;
     if (rpos + USB_CDC_EP_BULK_OUT_SIZE <= sizeof(receive_buf)) {
@@ -1104,7 +1094,6 @@ usb_bulk_out_task(void)
     }
     // Process input
     int_fast8_t pop_count = console_receive(receive_buf, rpos);
-    beep_error = 16;
     if (pop_count) {
         // Move buffer
         uint_fast8_t needcopy = rpos - pop_count;
@@ -1115,8 +1104,6 @@ usb_bulk_out_task(void)
         rpos = needcopy;
     }
     receive_pos = rpos;
-
-    beep_error = 17;
 }
 
 void runUSB() {

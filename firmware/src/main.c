@@ -3,7 +3,7 @@
 #include "beep.h"
 #include "watchdog.h"
 
-void main() {
+int main() {
   // watchdog_init();
   initUSB();
 

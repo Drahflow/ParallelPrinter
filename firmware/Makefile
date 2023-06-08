@@ -3,7 +3,8 @@ CROSS_PREFIX=arm-none-eabi
 CC=$(CROSS_PREFIX)-gcc
 OBJCOPY=$(CROSS_PREFIX)-objcopy
 CFLAGS=-mcpu=cortex-m7 -mthumb -Ilib -Ilib/cmsis-core \
-       -ffunction-sections -fdata-sections
+       -ffunction-sections -fdata-sections \
+       -Wall
 SOURCES=$(wildcard src/*.c)
 LIBS=$(wildcard lib/*.c)
 
