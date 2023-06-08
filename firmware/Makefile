@@ -5,8 +5,11 @@ OBJCOPY=$(CROSS_PREFIX)-objcopy
 CFLAGS=-mcpu=cortex-m7 -mthumb -Ilib -Ilib/cmsis-core \
        -ffunction-sections -fdata-sections
 SOURCES=$(wildcard src/*.c)
+LIBS=$(wildcard lib/*.c)
 
-OBJECTS=$(SOURCES:src/%.c=build/%.o)
+OBJECTS=\
+	$(SOURCES:src/%.c=build/%.o) \
+	$(LIBS:lib/%.c=build/%.o)
 
 build/firmware.bin: build/firmware.elf
 	$(OBJCOPY) -O binary $< $@
@@ -19,6 +22,9 @@ build/firmware.elf: src/stm32h723ze.ld $(OBJECTS)
 	  -o $@ $(OBJECTS)
 
 build/%.o: src/%.c src/*.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+build/%.o: lib/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 flash: build/firmware.bin

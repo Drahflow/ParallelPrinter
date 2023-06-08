@@ -1,14 +1,23 @@
 #include "usb.h"
 
 #include "beep.h"
+#include "watchdog.h"
 
 void main() {
-  // initUSB();
+  // watchdog_init();
+  initUSB();
 
-  beep_synchronous(2000, 880);
+  beep_synchronous(100, 880);
+  uint32_t t = 0;
 
   while(1) {
-    // runUSB();
+    if(t++ == 10000000) {
+      beep_synchronous(5, 880);
+      t = 0;
+    }
+
+    runUSB();
+    watchdog_reset();
   }
 }
 

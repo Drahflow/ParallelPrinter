@@ -4,5 +4,6 @@
 #include <stdint.h>
 
 void beep_synchronous(uint32_t ms, uint32_t freq);
+extern uint32_t beep_error;
 
 #endif
