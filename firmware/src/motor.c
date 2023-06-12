@@ -9,7 +9,7 @@ static struct gpio_out m1dir;
 static struct gpio_out m1uart_out;
 static struct gpio_in m1uart_in;
 
-uint8_t m1stepPulse = 0;
+// uint8_t m1stepPulse = 0;
 
 void wait(uint32_t n) {
   for(volatile uint32_t i = 0; i < n; ++i);
@@ -23,29 +23,23 @@ void initMotorDrivers() {
   m1uart_out = gpio_out_setup(GPIO('G', 14), 1);
 }
 
-#define WAIT_STEP 7500
+// #define WAIT_STEP 7500
 #define WAIT_UART 10000
 
-static void drive(uint32_t n) {
-    for(uint32_t i = 0; i < n; ++i) {
-      gpio_out_write(m1step, m1stepPulse);
-      m1stepPulse = !m1stepPulse;
-      wait(WAIT_STEP);
-    }
-}
+// static void drive(uint32_t n) {
+//     for(uint32_t i = 0; i < n; ++i) {
+//       gpio_out_write(m1step, m1stepPulse);
+//       m1stepPulse = !m1stepPulse;
+//       wait(WAIT_STEP);
+//     }
+// }
 
 void forward(uint32_t n) {
     gpio_out_write(m1dir, 1);
-    wait(WAIT_STEP);
-
-    drive(n);
 }
 
 void backward(uint32_t n) {
     gpio_out_write(m1dir, 0);
-    wait(WAIT_STEP);
-
-    drive(n);
 }
 
 static void updateCRC(uint8_t byte, uint8_t *crc) {
@@ -97,24 +91,28 @@ static void uartWriteRegister(uint8_t reg, uint32_t data) {
   uartSend(msg, sizeof(msg));
 }
 
-void setResolution(uint32_t powerOfTwo) {
+// stepResolution == 0 => 256 microsteps
+// stepResolution == 8 => 1 (micro)steps
+// runPower == 16 => minimal recommended
+// runPower == 31 => maximum
+void setupMotor(uint32_t stepResolution, uint32_t runPower) {
   uartWriteRegister(0x00,
       (1u << 0) | // use VREF
-      // (1u << 1) | // use internal resistors
+      // (1u << 1) | // use internal resistors (tried, but was worse)
       (1u << 2) | // use spread cycle
       (1u << 6) | // uart pin doesn't control power-down
       (1u << 7) | // microstep resolution in MSTEP
       // (1u << 8) | // filter steps
       0);
   uartWriteRegister(0x10,
-      (16u << 0) | // smallish IHOLD,
-      (24u << 8) | // medium IRUN,
+      ((runPower * 2 / 3) << 0) | // smallish IHOLD,
+      (runPower << 8) | // medium IRUN,
       (4u << 16) | // small-ish IHOLDDELAY
       0);
   uartWriteRegister(0x6C,
       (1u << 29) | // step on both edges
-      // (1u << 28) | // interpolate to full 256 microsteps
-      (powerOfTwo << 24) |
+      // (1u << 28) | // interpolate to full 256 microsteps, klipper doc advises against this
+      (stepResolution << 24) |
       (5u << 7) | // default hysteresis
       (3u << 0) | // default hysteresis
       0);

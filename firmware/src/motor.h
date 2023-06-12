@@ -6,7 +6,7 @@
 void initMotorDrivers();
 void forward();
 void backward();
-void setResolution(uint32_t powerOfTwo);
+void setupMotor(uint32_t stepResolution, uint32_t runPower);
 void dumpMotorStatus();
 
 #endif

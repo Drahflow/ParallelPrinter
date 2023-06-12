@@ -7,6 +7,7 @@
 #include "usb.h"
 #include "main.h"
 #include "beep.h"
+#include "tick.h"
 #include "config.h"
 
 #include <stdint.h>
@@ -35,7 +36,7 @@ const void *VectorTable[] __visible __section(".vector_table") = {
   DefaultHandler,
   DefaultHandler,
   DefaultHandler,
-  DefaultHandler,
+  [SysTick_IRQn + 16] = SysTick_IRQ_Handler,
   DefaultHandler,
   DefaultHandler,
   DefaultHandler,
