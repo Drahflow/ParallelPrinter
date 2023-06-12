@@ -1,0 +1,46 @@
+"Spherical Rolling Joint" -> sehr gut
+"Spherical Heim Joints" -> mittel
+"Gelenkkopflager" -> mittel
+"Magnet Kugelgelenk" -> gut?
+"Kugelgelenk" -> mittel
+"Kardangelenk" -> gut
+"Roller Screws" -> ludicrously good
+"Kugelumlaufspindel" -> sehr gut
+"Leitspindel / Gewindespindel" -> mittel
+https://biqu.equipment/products/bigtreetech-btt-octopusmax-ez-for-3d-printer
+https://shop.watterott.com/SilentStepStick-TMC2100-V1-verloetet_1
+https://biqu.equipment/collections/driver-board/products/ez-drive-easy-driver-ez2209-ez5160-pro-v1-0?variant=39787466358882
+https://www.ebay.de/itm/284179851369?chn=ps&var=585665730415&norover=1&mkevt=1&mkrid=7071533165376683&mkcid=2&itemid=585665730415_284179851369&targetid=4582833206194173&device=c&mktype=&googleloc=&poi=&campaignid=376712745&mkgroupid=1267737623409783&rlsatarget=pla-4582833206194173&abcId=9300540&merchantid=87778
+https://www.kugellager-express.de/online-waelzlagerkatalog-kugellagerkatalog
+Kegelrollenlager -> Für Axiallasten
+
+
+== Prototype version ==
+12mm Gewindestange 1000mm
+Schrägkugellager 3001 2RS TN 12x28x12 mm
+Schrägkugellager 30/8 2RS TN 8x22x11 mm
+[Achskupplung]
+
+== Shitty Prototype version ==
+ 6.00 EUR: 12mm Gewindestange 1000mm
+ 4.00 EUR: Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
+ 5.00 EUR: Miniatur Kugellager 608 ZZ / 2Z 8x22x7 mm
+ 7.00 EUR: LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
+95.00 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH Octopus MAX EZ 32Bit Motherboard MINI12864 V 2,0 Display Screen Upgrade Octopus Pro Control Board Für CR10 Voron
+ 9.72 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH EZ2209,1pcs
+22.00 EUR: Nema23: 5.7 x 5.7 x 7.6 cm, 1.9Nm, 3A, 4-Drähte, Bipolar, 23HS30-3004S
+29.00 EUR: OYYTRAFO AC-DC 24V 16.7A Schaltnetzteil 400W Transformator Netzteil für den Dauereinsatz Schalter 110-220V
+14.27 EUR: Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
+ 5.00 EUR: 1.5x1.5x1.5 Alu T-Profil 1000mm
+ 5.00 EUR: M4 12mm Stahlschrauben
+ 5.00 EUR: M4 25mm Stahlschrauben
+ 3.00 EUR: M4 Muttern
+ 3.00 EUR: M4 9mm (4.3x9x0.8) Unterlegscheiben
+ 3.00 EUR: M4 15mm (4.3x15x1.25) Unterlegscheiben "Kotflügelscheiben"
+
+== Things likely useful ==
+LIQUI MOLY LM 47 Langzeitfett + MoS2
+
+== Development Waste =
+ 5.00 EUR: Rillenkugellager 6801 / 61801 ZZ / 2Z 12x21x5 mm 
+ 3.00 EUR: 12mm Alustange 1000mm
