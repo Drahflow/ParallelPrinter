@@ -39,7 +39,8 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
  3.00 EUR: M4 15mm (4.3x15x1.25) Unterlegscheiben "Kotflügelscheiben"
 
 == Things likely useful ==
-LIQUI MOLY LM 47 Langzeitfett + MoS2
+Dry PTFE lubricant (for the lead screws)
+EZ5160 Pro Driver
 
 == Development Waste =
  5.00 EUR: Rillenkugellager 6801 / 61801 ZZ / 2Z 12x21x5 mm 
