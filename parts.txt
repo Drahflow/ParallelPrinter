@@ -37,9 +37,10 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
  3.00 EUR: M4 Muttern
  3.00 EUR: M4 9mm (4.3x9x0.8) Unterlegscheiben
  3.00 EUR: M4 15mm (4.3x15x1.25) Unterlegscheiben "Kotflügelscheiben"
+23.80 EUR: 8x LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
+ 4.95 EUR: 400ml Nigrin MoS2 Lubricant
 
 == Things likely useful ==
-Dry PTFE lubricant (for the lead screws)
 EZ5160 Pro Driver
 
 == Development Waste =
