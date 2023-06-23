@@ -42,6 +42,7 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
 
 == Things likely useful ==
 EZ5160 Pro Driver
+https://www.mydisplays.net/katz-displayboard-glazed?category=31&order=sequence+asc
 
 == Development Waste =
  5.00 EUR: Rillenkugellager 6801 / 61801 ZZ / 2Z 12x21x5 mm 
