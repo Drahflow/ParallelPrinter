@@ -22,23 +22,36 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
 [Achskupplung]
 
 == Shitty Prototype version ==
- 6.00 EUR: 12mm Gewindestange 1000mm
- 4.00 EUR: Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
- 5.00 EUR: Miniatur Kugellager 608 ZZ / 2Z 8x22x7 mm
- 7.00 EUR: LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
-95.00 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH Octopus MAX EZ 32Bit Motherboard MINI12864 V 2,0 Display Screen Upgrade Octopus Pro Control Board Für CR10 Voron
- 9.72 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH EZ2209,1pcs
-22.00 EUR: Nema23: 5.7 x 5.7 x 7.6 cm, 1.9Nm, 3A, 4-Drähte, Bipolar, 23HS30-3004S
-29.00 EUR: OYYTRAFO AC-DC 24V 16.7A Schaltnetzteil 400W Transformator Netzteil für den Dauereinsatz Schalter 110-220V
-14.27 EUR: Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
- 5.00 EUR: 1.5x1.5x1.5 Alu T-Profil 1000mm
- 5.00 EUR: M4 12mm Stahlschrauben
- 5.00 EUR: M4 25mm Stahlschrauben
- 3.00 EUR: M4 Muttern
- 3.00 EUR: M4 9mm (4.3x9x0.8) Unterlegscheiben
- 3.00 EUR: M4 15mm (4.3x15x1.25) Unterlegscheiben "Kotflügelscheiben"
-23.80 EUR: 8x LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
- 4.95 EUR: 400ml Nigrin MoS2 Lubricant
+ 22.50 EUR: 9x 12mm Gewindestange 1000mm
+  6.44 EUR: 4x Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
+  5.50 EUR: 8x Miniatur Kugellager 608 ZZ / 2Z 8x22x7 mm
+  7.00 EUR: LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
+ 95.00 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH Octopus MAX EZ 32Bit Motherboard MINI12864 V 2,0 Display Screen Upgrade Octopus Pro Control Board Für CR10 Voron
+  9.72 EUR: @BIGTREETECH OFFICIAL STORE: BIGTREETECH EZ2209,1pcs
+ 22.00 EUR: Nema23: 5.7 x 5.7 x 7.6 cm, 1.9Nm, 3A, 4-Drähte, Bipolar, 23HS30-3004S
+ 29.00 EUR: OYYTRAFO AC-DC 24V 16.7A Schaltnetzteil 400W Transformator Netzteil für den Dauereinsatz Schalter 110-220V
+ 14.27 EUR: 10x Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
+  2.95 EUR: 15x15x1.5 Alu T-Profil 1000mm
+  5.00 EUR: 100x M4 12mm Stahlschrauben
+  5.00 EUR: 100x M4 25mm Stahlschrauben
+  2.55 EUR: 100x M4 Muttern
+  1.45 EUR: 100x M4 9mm (4.3x9x0.8) Unterlegscheiben
+  3.00 EUR: 100x M4 15mm (4.3x15x1.25) Unterlegscheiben "Kotflügelscheiben"
+ 23.80 EUR: 8x LF Zwei Kiefer D25L30 Koppler Aluminium Plum Flexible Welle Kupplung Stepper Motor Anschluss CNC 5/6/6.35/8/10/12/12.7/14mm 5x8mm China, 6.35x12
+  4.95 EUR: 400ml Nigrin MoS2 Lubricant
+101.15 EUR: 38x Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
+       ^^^: 20x Miniatur Kugellager 608 ZZ / 2Z 8x22x7 mm
+       ^^^: 46x Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
+130.00 EUR: 6x Nema23: 5.7 x 5.7 x 7.6 cm, 1.9Nm, 3A, 4-Drähte, Bipolar, 23HS30-3004S
+ 26.16 EUR: 15m Kupferlitze 4x0.75mm
+ 35.81 EUR: 10x @BIGTREETECH MARVELOUS STORE: BIGTREETECH EZ2209
+  6.30 EUR: 2x 200x Universalschraube 3x16
+ 10.00 EUR: 2x 100x M4 12mm Stahlschrauben
+  5.10 EUR: 2x 100x M4 Muttern
+  4.35 EUR: 3x 100x 9mm (4.3x9x0.8) Unterlegscheiben
+  6.45 EUR: Winkelprofil vorne 1000mm
+ 23.60 EUR: 8x 15x15x1.5 Alu T-Profil 1000mm
+  8.00 EUR: 2x Strebenkonsole 250x1
 
 == Things likely useful ==
 EZ5160 Pro Driver
