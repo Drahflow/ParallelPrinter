@@ -54,6 +54,8 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
   8.00 EUR: 2x Strebenkonsole 250x1
  30.97 EUR: 7x Gewindebolzen M12 x 500mm (+3x included in this price)
  17.49 EUR: Retoo Digital Mikroskop Kamera mit 1600x Vergrößerung Endoskop
+ 10.61 EUR: 3x Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
+       ^^^: 4x Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
 
 == Things likely useful ==
 EZ5160 Pro Driver
