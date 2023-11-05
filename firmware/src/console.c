@@ -10,6 +10,8 @@ OutputSchedule m1start;
 OutputSchedule m1run;
 OutputSchedule m1stop;
 
+OutputSchedule singleSteps[MOTOR_COUNT];
+
 static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPos) {
   if(pos == ~0ul) return pos;
 
@@ -25,65 +27,97 @@ static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPo
   return pos;
 }
 
-static void m1SingleStep() {
-  m1start.count = 1;
-  m1start.timer = ~0ul;
-  m1start.dt = ~0ul;
-  m1start.next = NULL;
+static void singleStep(Motor *m) {
+  OutputSchedule *schedule = singleSteps + m->index;
+  schedule->count = 1;
+  schedule->timer = ~0ul;
+  schedule->dt = ~0ul;
+  schedule->next = NULL;
 
-  m1sched = &m1start;
+  scheduleMotor(m->index, schedule);
 }
 
-uint32_t m1resolution = 0;
-uint32_t m1power = 24;
+static void multiStep(Motor *m) {
+  OutputSchedule *schedule = singleSteps + m->index;
+  schedule->count = 64;
+  schedule->timer = 0;
+  schedule->dt = 109951162;
+  schedule->next = NULL;
 
-static void updateM1() {
-  setupMotor(m1resolution, m1power);
+  scheduleMotor(m->index, schedule);
+}
 
-  if(m1resolution == 0) console_send_str("256 microsteps");
-  if(m1resolution == 1) console_send_str("128 microsteps");
-  if(m1resolution == 2) console_send_str("64 microsteps");
-  if(m1resolution == 3) console_send_str("32 microsteps");
-  if(m1resolution == 4) console_send_str("16 microsteps");
-  if(m1resolution == 5) console_send_str("8 microsteps");
-  if(m1resolution == 6) console_send_str("4 microsteps");
-  if(m1resolution == 7) console_send_str("2 microsteps");
-  if(m1resolution == 8) console_send_str("no microsteps");
+uint32_t motorResolution = 0;
+uint32_t motorPower = 8;
+
+static void updateMotors() {
+  setupMotor(motors + 0, motorResolution, motorPower);
+  setupMotor(motors + 1, motorResolution, motorPower);
+  setupMotor(motors + 2, motorResolution, motorPower);
+  setupMotor(motors + 3, motorResolution, motorPower);
+  setupMotor(motors + 4, motorResolution, motorPower);
+  setupMotor(motors + 5, motorResolution, motorPower);
+  setupMotor(motors + 6, motorResolution, motorPower);
+
+  if(motorResolution == 0) console_send_str("256 microsteps");
+  if(motorResolution == 1) console_send_str("128 microsteps");
+  if(motorResolution == 2) console_send_str("64 microsteps");
+  if(motorResolution == 3) console_send_str("32 microsteps");
+  if(motorResolution == 4) console_send_str("16 microsteps");
+  if(motorResolution == 5) console_send_str("8 microsteps");
+  if(motorResolution == 6) console_send_str("4 microsteps");
+  if(motorResolution == 7) console_send_str("2 microsteps");
+  if(motorResolution == 8) console_send_str("no microsteps");
 
   console_send_str(", power: ");
-  console_send_uint8(m1power);
+  console_send_uint8(motorPower);
   console_send_str("\r\n");
+}
+
+void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
+  if(buf[0] == up) { backward(m); singleStep(m); }
+  if(buf[0] == UP) { backward(m); multiStep(m); }
+
+  if(buf[0] == down) { forward(m); singleStep(m); }
+  if(buf[0] == DOWN) { forward(m); multiStep(m); }
 }
 
 int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   // console_send((uint8_t *)"\r\nRCV:", 6);
   // console_send(buf, buf_len);
 
-  if(buf[0] == ',') {
-    backward(1);
-    m1SingleStep();
+  interactiveMotor(buf, motors + 0, ';', ':', 'a', 'A');
+  interactiveMotor(buf, motors + 1, ',', '<', 'o', 'O');
+  interactiveMotor(buf, motors + 2, '.', '>', 'e', 'E');
+  interactiveMotor(buf, motors + 3, 'p', 'P', 'u', 'U');
+  interactiveMotor(buf, motors + 4, 'y', 'Y', 'i', 'I');
+  interactiveMotor(buf, motors + 5, 'f', 'F', 'd', 'D');
+  interactiveMotor(buf, motors + 6, 'g', 'G', 'h', 'H');
+
+  if(buf[0] == '1') { motorResolution = 0; updateMotors(); }
+  if(buf[0] == '2') { motorResolution = 1; updateMotors(); }
+  if(buf[0] == '3') { motorResolution = 2; updateMotors(); }
+  if(buf[0] == '4') { motorResolution = 3; updateMotors(); }
+  if(buf[0] == '5') { motorResolution = 4; updateMotors(); }
+  if(buf[0] == '6') { motorResolution = 5; updateMotors(); }
+  if(buf[0] == '7') { motorResolution = 6; updateMotors(); }
+  if(buf[0] == '8') { motorResolution = 7; updateMotors(); }
+  if(buf[0] == '9') { motorResolution = 8; updateMotors(); }
+  if(buf[0] == '/') { motorPower = 8; updateMotors(); }
+  if(buf[0] == '-') { motorPower = 16; updateMotors(); }
+  if(buf[0] == '+') { motorPower = 20; updateMotors(); }
+  if(buf[0] == '*') { motorPower = 24; updateMotors(); }
+
+  if(buf[0] == 's') {
+    dumpMotorStatus(motors + 0);
+    dumpMotorStatus(motors + 1);
+    dumpMotorStatus(motors + 2);
+    dumpMotorStatus(motors + 3);
+    dumpMotorStatus(motors + 4);
+    dumpMotorStatus(motors + 5);
+    dumpMotorStatus(motors + 6);
   }
 
-  if(buf[0] == 'o') {
-    forward(1);
-    m1SingleStep();
-  }
-
-  if(buf[0] == '1') { m1resolution = 0; updateM1(); }
-  if(buf[0] == '2') { m1resolution = 1; updateM1(); }
-  if(buf[0] == '3') { m1resolution = 2; updateM1(); }
-  if(buf[0] == '4') { m1resolution = 3; updateM1(); }
-  if(buf[0] == '5') { m1resolution = 4; updateM1(); }
-  if(buf[0] == '6') { m1resolution = 5; updateM1(); }
-  if(buf[0] == '7') { m1resolution = 6; updateM1(); }
-  if(buf[0] == '8') { m1resolution = 7; updateM1(); }
-  if(buf[0] == '9') { m1resolution = 8; updateM1(); }
-  if(buf[0] == '/') { m1power = 16; updateM1(); }
-  if(buf[0] == '-') { m1power = 24; updateM1(); }
-  if(buf[0] == '+') { m1power = 28; updateM1(); }
-  if(buf[0] == '*') { m1power = 31; updateM1(); }
-
-  if(buf[0] == 's') dumpMotorStatus();
   if(buf[0] == 't') {
     enableSystick();
     console_send_str("SysTick enabled\r\n");
@@ -137,7 +171,8 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     m1run.next = &m1stop;
     m1stop.next = NULL;
 
-    m1sched = &m1start;
+    // Disabled for the time being, we don't want to drive a single axis fast at the moment.
+    // scheduleMotor(0, &m1start);
   }
 
   return buf_len;
@@ -167,13 +202,25 @@ void console_send_uint32(uint32_t val) {
   console_send(buf, sizeof(buf));
 }
 
-void console_send_uint8(uint32_t val) {
-  uint8_t buf[8];
+void console_send_uint8(uint32_t n) {
+  uint8_t buf[14];
   uint32_t p = 7;
-  for(uint32_t i = 0; i < 32; ++i) {
+  uint32_t val = n;
+  for(uint32_t i = 0; i < 8; ++i) {
     buf[p--] = (val & 1)? '1': '0';
     val >>= 1;
   }
+
+  buf[8] = ' ';
+  buf[9] = '(';
+  p = 12;
+  val = n;
+  for(uint32_t i = 0; i < 3; ++i) {
+    buf[p--] = '0' + (val % 10);
+    val /= 10;
+  }
+
+  buf[13] = ')';
 
   console_send(buf, sizeof(buf));
 }

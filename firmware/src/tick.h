@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "config.h"
+
 typedef struct OutputSchedule {
   uint32_t count;
   uint32_t timer;
@@ -12,9 +14,10 @@ typedef struct OutputSchedule {
   struct OutputSchedule *next;
 } OutputSchedule;
 
-extern OutputSchedule *m1sched;
-
 void enableSystick();
 void SysTick_IRQ_Handler();
+
+void scheduleMotor(uint32_t index, OutputSchedule *);
+
 
 #endif

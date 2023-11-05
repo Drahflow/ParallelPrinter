@@ -25,5 +25,6 @@
 #define USB_BOOT_FLAG 0x55534220424f4f54 // "USB BOOT"
 #define USB_BOOT_FLAG_ADDR (0x24000000 + 0x8000) // Place flag in "AXI SRAM"
 
+#define MOTOR_COUNT 7
 
 #endif
