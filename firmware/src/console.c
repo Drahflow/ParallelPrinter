@@ -5,10 +5,15 @@
 #include "tick.h"
 
 #include <stddef.h>
+#include <string.h>
 
-OutputSchedule m1start;
-OutputSchedule m1run;
-OutputSchedule m1stop;
+OutputSchedule startTemplate;
+OutputSchedule runTemplate;
+OutputSchedule stopTemplate;
+
+OutputSchedule start[MOTOR_COUNT];
+OutputSchedule run[MOTOR_COUNT];
+OutputSchedule stop[MOTOR_COUNT];
 
 OutputSchedule singleSteps[MOTOR_COUNT];
 
@@ -38,13 +43,15 @@ static void singleStep(Motor *m) {
 }
 
 static void multiStep(Motor *m) {
-  OutputSchedule *schedule = singleSteps + m->index;
-  schedule->count = 64;
-  schedule->timer = 0;
-  schedule->dt = 109951162;
-  schedule->next = NULL;
+  memcpy(&start[m->index], &startTemplate, sizeof(OutputSchedule));
+  memcpy(&run[m->index], &runTemplate, sizeof(OutputSchedule));
+  memcpy(&stop[m->index], &stopTemplate, sizeof(OutputSchedule));
 
-  scheduleMotor(m->index, schedule);
+  start[m->index].next = &run[m->index];
+  run[m->index].next = &stop[m->index];
+  stop[m->index].next = NULL;
+
+  scheduleMotor(m->index, &start[m->index]);
 }
 
 uint32_t motorResolution = 0;
@@ -131,20 +138,20 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     if(buf[buf_len - 1] != '\n' && buf[buf_len - 1] != '\r') return 0; // wait for more
 
     int pos = 1;
-    pos = parseU32(&m1start.count, buf, pos, buf_len);
-    pos = parseU32(&m1start.dt, buf, pos, buf_len);
-    pos = parseU32(&m1start.ddt, buf, pos, buf_len);
-    pos = parseU32(&m1start.dddt, buf, pos, buf_len);
+    pos = parseU32(&startTemplate.count, buf, pos, buf_len);
+    pos = parseU32(&startTemplate.dt, buf, pos, buf_len);
+    pos = parseU32(&startTemplate.ddt, buf, pos, buf_len);
+    pos = parseU32(&startTemplate.dddt, buf, pos, buf_len);
 
-    pos = parseU32(&m1run.count, buf, pos, buf_len);
-    pos = parseU32(&m1run.dt, buf, pos, buf_len);
-    pos = parseU32(&m1run.ddt, buf, pos, buf_len);
-    pos = parseU32(&m1run.dddt, buf, pos, buf_len);
+    pos = parseU32(&runTemplate.count, buf, pos, buf_len);
+    pos = parseU32(&runTemplate.dt, buf, pos, buf_len);
+    pos = parseU32(&runTemplate.ddt, buf, pos, buf_len);
+    pos = parseU32(&runTemplate.dddt, buf, pos, buf_len);
 
-    pos = parseU32(&m1stop.count, buf, pos, buf_len);
-    pos = parseU32(&m1stop.dt, buf, pos, buf_len);
-    pos = parseU32(&m1stop.ddt, buf, pos, buf_len);
-    pos = parseU32(&m1stop.dddt, buf, pos, buf_len);
+    pos = parseU32(&stopTemplate.count, buf, pos, buf_len);
+    pos = parseU32(&stopTemplate.dt, buf, pos, buf_len);
+    pos = parseU32(&stopTemplate.ddt, buf, pos, buf_len);
+    pos = parseU32(&stopTemplate.dddt, buf, pos, buf_len);
 
     if(pos == ~0ull) {
       console_send_str("Failed to parse\r\n");
@@ -152,27 +159,20 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     }
 
     console_send_str("Start: ");
-    console_send_uint32(m1start.count); console_send_str(" ");
-    console_send_uint32(m1start.dt); console_send_str(" ");
-    console_send_uint32(m1start.ddt); console_send_str(" ");
-    console_send_uint32(m1start.dddt); console_send_str(" \r\n");
+    console_send_uint32(startTemplate.count); console_send_str(" ");
+    console_send_uint32(startTemplate.dt); console_send_str(" ");
+    console_send_uint32(startTemplate.ddt); console_send_str(" ");
+    console_send_uint32(startTemplate.dddt); console_send_str(" \r\n");
     console_send_str("Run: ");
-    console_send_uint32(m1run.count); console_send_str(" ");
-    console_send_uint32(m1run.dt); console_send_str(" ");
-    console_send_uint32(m1run.ddt); console_send_str(" ");
-    console_send_uint32(m1run.dddt); console_send_str(" \r\n");
+    console_send_uint32(runTemplate.count); console_send_str(" ");
+    console_send_uint32(runTemplate.dt); console_send_str(" ");
+    console_send_uint32(runTemplate.ddt); console_send_str(" ");
+    console_send_uint32(runTemplate.dddt); console_send_str(" \r\n");
     console_send_str("Stop: ");
-    console_send_uint32(m1stop.count); console_send_str(" ");
-    console_send_uint32(m1stop.dt); console_send_str(" ");
-    console_send_uint32(m1stop.ddt); console_send_str(" ");
-    console_send_uint32(m1stop.dddt); console_send_str(" \r\n");
-
-    m1start.next = &m1run;
-    m1run.next = &m1stop;
-    m1stop.next = NULL;
-
-    // Disabled for the time being, we don't want to drive a single axis fast at the moment.
-    // scheduleMotor(0, &m1start);
+    console_send_uint32(stopTemplate.count); console_send_str(" ");
+    console_send_uint32(stopTemplate.dt); console_send_str(" ");
+    console_send_uint32(stopTemplate.ddt); console_send_str(" ");
+    console_send_uint32(stopTemplate.dddt); console_send_str(" \r\n");
   }
 
   return buf_len;
