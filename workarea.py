@@ -21,7 +21,7 @@ starts = []
 
 for m in range(MOTORS):
     d = displacements[m]
-    starts.append(d[1] + (strutLen * strutLen - d[0] * d[0] - d[1] * d[1] - d[2] * d[2]) ** 0.5)
+    starts.append(d[1] + (strutLen * strutLen - d[0] * d[0] - d[2] * d[2]) ** 0.5)
 
 print(starts)
 
