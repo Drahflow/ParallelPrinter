@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 
 OutputSchedule startTemplate;
 OutputSchedule runTemplate;
@@ -89,33 +90,50 @@ void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char 
   if(buf[0] == DOWN) { forward(m); multiStep(m); }
 }
 
+static bool interactive = false;
 int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   // console_send((uint8_t *)"\r\nRCV:", 6);
   // console_send(buf, buf_len);
 
-  interactiveMotor(buf, motors + 0, ';', ':', 'a', 'A');
-  interactiveMotor(buf, motors + 1, ',', '<', 'o', 'O');
-  interactiveMotor(buf, motors + 2, '.', '>', 'e', 'E');
-  interactiveMotor(buf, motors + 3, 'p', 'P', 'u', 'U');
-  interactiveMotor(buf, motors + 4, 'y', 'Y', 'i', 'I');
-  interactiveMotor(buf, motors + 5, 'f', 'F', 'd', 'D');
-  interactiveMotor(buf, motors + 6, 'g', 'G', 'h', 'H');
+  if(interactive) {
+    interactiveMotor(buf, motors + 0, ';', ':', 'a', 'A');
+    interactiveMotor(buf, motors + 1, ',', '<', 'o', 'O');
+    interactiveMotor(buf, motors + 2, '.', '>', 'e', 'E');
+    interactiveMotor(buf, motors + 3, 'p', 'P', 'u', 'U');
+    interactiveMotor(buf, motors + 4, 'y', 'Y', 'i', 'I');
+    interactiveMotor(buf, motors + 5, 'f', 'F', 'd', 'D');
+    interactiveMotor(buf, motors + 6, 'g', 'G', 'h', 'H');
 
-  if(buf[0] == '1') { motorResolution = 0; updateMotors(); }
-  if(buf[0] == '2') { motorResolution = 1; updateMotors(); }
-  if(buf[0] == '3') { motorResolution = 2; updateMotors(); }
-  if(buf[0] == '4') { motorResolution = 3; updateMotors(); }
-  if(buf[0] == '5') { motorResolution = 4; updateMotors(); }
-  if(buf[0] == '6') { motorResolution = 5; updateMotors(); }
-  if(buf[0] == '7') { motorResolution = 6; updateMotors(); }
-  if(buf[0] == '8') { motorResolution = 7; updateMotors(); }
-  if(buf[0] == '9') { motorResolution = 8; updateMotors(); }
-  if(buf[0] == '/') { motorPower = 8; updateMotors(); }
-  if(buf[0] == '-') { motorPower = 16; updateMotors(); }
-  if(buf[0] == '+') { motorPower = 20; updateMotors(); }
-  if(buf[0] == '*') { motorPower = 24; updateMotors(); }
+    if(buf[0] == '1') { motorResolution = 0; updateMotors(); }
+    if(buf[0] == '2') { motorResolution = 1; updateMotors(); }
+    if(buf[0] == '3') { motorResolution = 2; updateMotors(); }
+    if(buf[0] == '4') { motorResolution = 3; updateMotors(); }
+    if(buf[0] == '5') { motorResolution = 4; updateMotors(); }
+    if(buf[0] == '6') { motorResolution = 5; updateMotors(); }
+    if(buf[0] == '7') { motorResolution = 6; updateMotors(); }
+    if(buf[0] == '8') { motorResolution = 7; updateMotors(); }
+    if(buf[0] == '9') { motorResolution = 8; updateMotors(); }
+    if(buf[0] == '/') { motorPower = 8; updateMotors(); }
+    if(buf[0] == '-') { motorPower = 16; updateMotors(); }
+    if(buf[0] == '+') { motorPower = 20; updateMotors(); }
+    if(buf[0] == '*') { motorPower = 24; updateMotors(); }
 
-  if(buf[0] == 's') {
+    if(buf[0] == ' ') {
+      console_send_str("Interactive mode off.\r\n");
+      interactive = false;
+    }
+
+    return buf_len;
+  }
+
+  if(buf[buf_len - 1] != '\n' && buf[buf_len - 1] != '\r') return 0; // wait for more
+
+  char *cmd = (char *)buf;
+  int cmdEnd;
+  for(cmdEnd = 0; cmdEnd < buf_len && buf[cmdEnd] > ' '; ++cmdEnd);
+  buf[cmdEnd] = '\0';
+
+  if(strncmp(cmd, "motor_status", buf_len) == 0) {
     dumpMotorStatus(motors + 0);
     dumpMotorStatus(motors + 1);
     dumpMotorStatus(motors + 2);
@@ -125,19 +143,31 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     dumpMotorStatus(motors + 6);
   }
 
-  if(buf[0] == 't') {
+  if(strncmp(cmd, "interactive", buf_len) == 0) {
+    interactive = true;
+  }
+
+  if(strncmp(cmd, "tick:on", buf_len) == 0) {
     enableSystick();
     console_send_str("SysTick enabled\r\n");
   }
-  if(buf[0] == 'm') {
+  if(strncmp(cmd, "motors:on", buf_len) == 0) {
     initMotorDrivers();
     console_send_str("Motors enabled\r\n");
   }
 
-  if(buf[0] == 'M') {
-    if(buf[buf_len - 1] != '\n' && buf[buf_len - 1] != '\r') return 0; // wait for more
+  if(strncmp(cmd, "endstop:on", buf_len) == 0) {
+    gpio_out_setup(GPIO('F', 0), 1);
+    console_send_str("Endstop enabled\r\n");
+  }
+  if(strncmp(cmd, "endstop:off", buf_len) == 0) {
+    gpio_out_setup(GPIO('F', 0), 0);
+    console_send_str("Endstop disabled\r\n");
+  }
 
-    int pos = 1;
+  if(strncmp(cmd, "config:big_step", buf_len) == 0) {
+    int pos = cmdEnd + 1;
+
     pos = parseU32(&startTemplate.count, buf, pos, buf_len);
     pos = parseU32(&startTemplate.dt, buf, pos, buf_len);
     pos = parseU32(&startTemplate.ddt, buf, pos, buf_len);

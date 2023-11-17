@@ -58,6 +58,7 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
        ^^^: 4x Rillenkugellager 6001 ZZ / 2Z 12x28x8 mm
   2.90 EUR: 2x 100x 9mm (4.3x9x0.8) Unterlegscheiben
   2.55 EUR: 1x 100x M4 Muttern
+  2.00 EUR: 1x 5V Laser Diode 650nm, 10mm long, 6mm diameter, 5mm diameter groove
 
 
 == Things likely useful ==
