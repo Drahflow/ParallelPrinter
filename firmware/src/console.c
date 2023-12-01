@@ -3,6 +3,7 @@
 #include "usb.h"
 #include "motor.h"
 #include "tick.h"
+#include "endstop.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -90,6 +91,7 @@ void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char 
   if(buf[0] == DOWN) { forward(m); multiStep(m); }
 }
 
+static uint_fast8_t echoed = 0;
 static bool interactive = false;
 int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   // console_send((uint8_t *)"\r\nRCV:", 6);
@@ -126,7 +128,14 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     return buf_len;
   }
 
-  if(buf[buf_len - 1] != '\n' && buf[buf_len - 1] != '\r') return 0; // wait for more
+  console_send(buf + echoed, buf_len - echoed);
+  echoed = buf_len;
+
+  if(buf[buf_len - 1] != '\n' && buf[buf_len - 1] != '\r') {
+    return 0; // wait for more
+  }
+
+  echoed = 0;
 
   char *cmd = (char *)buf;
   int cmdEnd;
@@ -157,12 +166,16 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   }
 
   if(strncmp(cmd, "endstop:on", buf_len) == 0) {
-    gpio_out_setup(GPIO('F', 0), 1);
+    endstopOn();
     console_send_str("Endstop enabled\r\n");
   }
   if(strncmp(cmd, "endstop:off", buf_len) == 0) {
-    gpio_out_setup(GPIO('F', 0), 0);
+    endstopOff();
     console_send_str("Endstop disabled\r\n");
+  }
+  if(strncmp(cmd, "endstop:scan", buf_len) == 0) {
+    console_send_str("Endstop scanning\r\n");
+    endstopScan();
   }
 
   if(strncmp(cmd, "config:big_step", buf_len) == 0) {

@@ -1,7 +1,7 @@
 #include "usb.h"
-
 #include "beep.h"
 #include "watchdog.h"
+#include "endstop.h"
 
 int main() {
   // watchdog_init();
@@ -16,6 +16,7 @@ int main() {
       t = 0;
     }
 
+    runEndstop();
     runUSB();
     watchdog_reset();
   }

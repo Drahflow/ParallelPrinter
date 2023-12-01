@@ -3,6 +3,7 @@
 #include "stm32h7xx.h"
 #include "config.h"
 #include "console.h"
+#include "endstop.h"
 
 #include <stddef.h>
 
@@ -55,6 +56,10 @@ uint32_t m9pulse = 0;
     } \
   } while(0)
 
+
+EndstopState endstopState;
+uint32_t endstopDuration;
+
 void SysTick_IRQ_Handler() {
   MOTOR_TICK(GPIOC, 13, m0sched, m0pulse);
   MOTOR_TICK(GPIOE,  4, m1sched, m1pulse);
@@ -66,6 +71,38 @@ void SysTick_IRQ_Handler() {
   MOTOR_TICK(GPIOA, 10, m7sched, m7pulse);
   MOTOR_TICK(GPIOA,  8, m8sched, m8pulse);
   MOTOR_TICK(GPIOG,  6, m9sched, m9pulse);
+
+  switch(endstopState) {
+#define endstop_pin 0
+#define endstop_pin_high() (GPIOF->IDR & (1u << endstop_pin))
+    case ENDSTOP_WAIT:
+      if(endstop_pin_high()) break;
+
+      endstopState = ENDSTOP_SCAN;
+      endstopDuration = 0;
+      break;
+
+    case ENDSTOP_SCAN:
+      if(!endstop_pin_high()) {
+        ++endstopDuration;
+        break;
+      }
+
+      endstopState = ENDSTOP_DONE;
+      break;
+
+    case ENDSTOP_DONE:
+      break;
+  }
+}
+
+void scheduleEndstopScan() {
+  endstopState = ENDSTOP_WAIT;
+  endstopDuration = 0;
+}
+
+void stopEndstopScan() {
+  endstopState = ENDSTOP_DONE;
 }
 
 void scheduleMotor(uint32_t index, OutputSchedule *schedule) {

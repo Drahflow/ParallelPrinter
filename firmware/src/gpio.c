@@ -66,6 +66,32 @@ gpio_out_reset(struct gpio_out g, uint32_t val)
 }
 
 void
+gpio_opendrain_out_reset(struct gpio_out g, uint32_t val)
+{
+    GPIO_TypeDef *regs = g.regs;
+    int pin = regs_to_pin(regs, g.bit);
+    irqstatus_t flag = irq_save();
+    if (val)
+        regs->BSRR = g.bit;
+    else
+        regs->BSRR = g.bit << 16;
+    gpio_peripheral(pin, GPIO_OUTPUT | GPIO_OPEN_DRAIN, 0);
+    irq_restore(flag);
+}
+
+struct gpio_out
+gpio_opendrain_out_setup(uint32_t pin, uint32_t val)
+{
+    if (!gpio_valid(pin))
+        shutdown("Not an output pin");
+    GPIO_TypeDef *regs = digital_regs[GPIO2PORT(pin)];
+    gpio_clock_enable(regs);
+    struct gpio_out g = { .regs=regs, .bit=GPIO2BIT(pin) };
+    gpio_opendrain_out_reset(g, val);
+    return g;
+}
+
+void
 gpio_out_toggle_noirq(struct gpio_out g)
 {
     GPIO_TypeDef *regs = g.regs;
@@ -92,23 +118,23 @@ gpio_out_write(struct gpio_out g, uint32_t val)
 
 
 struct gpio_in
-gpio_in_setup(uint32_t pin, int32_t pull_up)
+gpio_in_setup(uint32_t pin, int32_t pull_dir)
 {
     if (!gpio_valid(pin))
         shutdown("Not a valid input pin");
     GPIO_TypeDef *regs = digital_regs[GPIO2PORT(pin)];
     struct gpio_in g = { .regs=regs, .bit=GPIO2BIT(pin) };
-    gpio_in_reset(g, pull_up);
+    gpio_in_reset(g, pull_dir);
     return g;
 }
 
 void
-gpio_in_reset(struct gpio_in g, int32_t pull_up)
+gpio_in_reset(struct gpio_in g, int32_t pull_dir)
 {
     GPIO_TypeDef *regs = g.regs;
     int pin = regs_to_pin(regs, g.bit);
     irqstatus_t flag = irq_save();
-    gpio_peripheral(pin, GPIO_INPUT, pull_up);
+    gpio_peripheral(pin, GPIO_INPUT, pull_dir);
     irq_restore(flag);
 }
 
@@ -119,9 +145,30 @@ gpio_in_read(struct gpio_in g)
     return !!(regs->IDR & g.bit);
 }
 
+void
+gpio_analog_in_reset(struct gpio_in g)
+{
+    GPIO_TypeDef *regs = g.regs;
+    int pin = regs_to_pin(regs, g.bit);
+    irqstatus_t flag = irq_save();
+    gpio_peripheral(pin, GPIO_ANALOG, 0);
+    irq_restore(flag);
+}
+
+struct gpio_in
+gpio_analog_in_setup(uint32_t pin)
+{
+    if (!gpio_valid(pin))
+        shutdown("Not a valid input pin");
+    GPIO_TypeDef *regs = digital_regs[GPIO2PORT(pin)];
+    struct gpio_in g = { .regs=regs, .bit=GPIO2BIT(pin) };
+    gpio_analog_in_reset(g);
+    return g;
+}
+
 // Set the mode, extended function and speed of a pin
 void
-gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)
+gpio_peripheral(uint32_t gpio, uint32_t mode, int pull_dir)
 {
     GPIO_TypeDef *regs = digital_regs[GPIO2PORT(gpio)];
 
@@ -129,12 +176,17 @@ gpio_peripheral(uint32_t gpio, uint32_t mode, int pullup)
     gpio_clock_enable(regs);
 
     // Configure GPIO
-    uint32_t mode_bits = mode & 0xf, func = (mode >> 4) & 0xf;
-    uint32_t od = (mode >> 8) & 0x1, hs = (mode >> 9) & 0x1;
-    uint32_t pup = pullup ? (pullup > 0 ? 1 : 2) : 0;
-    uint32_t pos = gpio % 16, af_reg = pos / 8;
-    uint32_t af_shift = (pos % 8) * 4, af_msk = 0x0f << af_shift;
-    uint32_t m_shift = pos * 2, m_msk = 0x03 << m_shift;
+    uint32_t mode_bits = mode & 0xf;
+    uint32_t func = (mode >> 4) & 0xf;
+    uint32_t od = (mode >> 8) & 0x1;
+    uint32_t hs = (mode >> 9) & 0x1;
+    uint32_t pup = pull_dir ? (pull_dir > 0 ? 1 : 2) : 0;
+    uint32_t pos = gpio % 16;
+    uint32_t af_reg = pos / 8;
+    uint32_t af_shift = (pos % 8) * 4;
+    uint32_t af_msk = 0x0f << af_shift;
+    uint32_t m_shift = pos * 2;
+    uint32_t m_msk = 0x03 << m_shift;
 
     regs->AFR[af_reg] = (regs->AFR[af_reg] & ~af_msk) | (func << af_shift);
     regs->MODER = (regs->MODER & ~m_msk) | (mode_bits << m_shift);

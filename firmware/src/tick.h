@@ -14,10 +14,20 @@ typedef struct OutputSchedule {
   struct OutputSchedule *next;
 } OutputSchedule;
 
+typedef enum {
+  ENDSTOP_WAIT,
+  ENDSTOP_SCAN,
+  ENDSTOP_DONE
+} EndstopState;
+
 void enableSystick();
 void SysTick_IRQ_Handler();
 
 void scheduleMotor(uint32_t index, OutputSchedule *);
+void scheduleEndstopScan();
+void stopEndstopScan();
 
+extern EndstopState endstopState;
+extern uint32_t endstopDuration;
 
 #endif

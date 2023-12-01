@@ -14,6 +14,8 @@ struct gpio_out {
 };
 
 struct gpio_out gpio_out_setup(uint32_t pin, uint32_t val);
+struct gpio_out gpio_opendrain_out_setup(uint32_t pin, uint32_t val);
+
 void gpio_out_reset(struct gpio_out g, uint32_t val);
 void gpio_out_toggle_noirq(struct gpio_out g);
 void gpio_out_toggle(struct gpio_out g);
@@ -26,6 +28,8 @@ struct gpio_in {
 struct gpio_in gpio_in_setup(uint32_t pin, int32_t pull_up);
 void gpio_in_reset(struct gpio_in g, int32_t pull_up);
 uint8_t gpio_in_read(struct gpio_in g);
+
+struct gpio_in gpio_analog_in_setup(uint32_t pin);
 
 #define GPIO(PORT, NUM) (((PORT)-'A') * 16 + (NUM))
 #define GPIO2PORT(PIN) ((PIN) / 16)
