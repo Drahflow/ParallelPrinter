@@ -4,12 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern bool endstopScanning;
-
 void runEndstop();
 
 void endstopOn();
 void endstopOff();
+void endstopFloat();
 void endstopScan();
+
+bool endstopScanning();
+uint32_t endstopScanTime();
 
 #endif

@@ -2,6 +2,7 @@
 #include "beep.h"
 #include "watchdog.h"
 #include "endstop.h"
+#include "homing.h"
 
 int main() {
   // watchdog_init();
@@ -17,6 +18,7 @@ int main() {
     }
 
     runEndstop();
+    runHoming();
     runUSB();
     watchdog_reset();
   }

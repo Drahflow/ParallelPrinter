@@ -18,8 +18,18 @@ void endstopOff() {
   gpio_out_setup(GPIO('F', 0), 0);
 }
 
-void endstopScan(uint32_t level) {
+void endstopFloat() {
+  stopEndstopScan();
+
   gpio_in_setup(GPIO('F', 0), 0);
+}
+
+bool endstopScanning() {
+  return endstopState == ENDSTOP_SCAN;
+}
+
+void endstopScan() {
+  gpio_out_setup(GPIO('F', 0), 1);
 
   scheduleEndstopScan();
 }
@@ -29,6 +39,9 @@ void runEndstop() {
   if(endstopState != oldState) {
     oldState = endstopState;
     switch(endstopState) {
+      case ENDSTOP_INIT:
+        console_send_str("Endstop init.\r\n");
+        break;
       case ENDSTOP_WAIT:
         console_send_str("Endstop high.\r\n");
         break;

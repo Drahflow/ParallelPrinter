@@ -20,8 +20,6 @@ struct Motor {
 extern Motor motors[MOTOR_COUNT];
 
 void initMotorDrivers();
-void forward(Motor *);
-void backward(Motor *);
 void setupMotor(Motor *, uint32_t stepResolution, uint32_t runPower);
 void dumpMotorStatus(Motor *);
 

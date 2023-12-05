@@ -114,14 +114,6 @@ void initMotorDrivers() {
 
 #define WAIT_UART 10000
 
-void forward(Motor *m) {
-    gpio_out_write(m->dir, 1);
-}
-
-void backward(Motor *m) {
-    gpio_out_write(m->dir, 0);
-}
-
 static void updateCRC(uint8_t byte, uint8_t *crc) {
   for(uint8_t j = 0; j < 8; ++j) {
     if((*crc >> 7) ^ (byte & 1)) {

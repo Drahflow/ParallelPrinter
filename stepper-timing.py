@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-RPM = 800.0
+RPM = 10.0
 Startup = 0.05 # second
-Run = 1.0 # second
+Run = 0.15 # second
 Stop = 0.05 # second
 Microsteps = 256
 
@@ -43,7 +43,8 @@ for i in range(int(2000000 * Stop)):
     if dt > 2 ** 32:
         dt -= 2 ** 32
 
-print("M %d %d %d %d %d %d %d %d %d %d %d %d" % (
+# FIXME: Timer zero-values are wrong
+print("config:<whatever> %d 0 %d %d %d %d 0 %d %d %d %d 0 %d %d %d" % (
     startPulses, 0, startDDT, 0,
     runPulses, runDt, 0, 0,
     stopPulses, runDt, stopDDT, 0,

@@ -4,6 +4,7 @@
 #include "motor.h"
 #include "tick.h"
 #include "endstop.h"
+#include "homing.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -34,20 +35,25 @@ static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPo
   return pos;
 }
 
-static void singleStep(Motor *m) {
+static void singleStep(Motor *m, uint8_t direction) {
   OutputSchedule *schedule = singleSteps + m->index;
   schedule->count = 1;
   schedule->timer = ~0ul;
   schedule->dt = ~0ul;
   schedule->next = NULL;
+  schedule->dir = direction;
 
   scheduleMotor(m->index, schedule);
 }
 
-static void multiStep(Motor *m) {
+static void multiStep(Motor *m, uint8_t direction) {
   memcpy(&start[m->index], &startTemplate, sizeof(OutputSchedule));
   memcpy(&run[m->index], &runTemplate, sizeof(OutputSchedule));
   memcpy(&stop[m->index], &stopTemplate, sizeof(OutputSchedule));
+
+  start[m->index].dir = direction;
+  run[m->index].dir = direction;
+  stop[m->index].dir = direction;
 
   start[m->index].next = &run[m->index];
   run[m->index].next = &stop[m->index];
@@ -56,39 +62,92 @@ static void multiStep(Motor *m) {
   scheduleMotor(m->index, &start[m->index]);
 }
 
-uint32_t motorResolution = 0;
-uint32_t motorPower = 8;
+void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
+  if(buf[0] == up) { singleStep(m, DIR_MAIN_AXIS_UP); }
+  if(buf[0] == UP) { multiStep(m, DIR_MAIN_AXIS_UP); }
 
-static void updateMotors() {
-  setupMotor(motors + 0, motorResolution, motorPower);
-  setupMotor(motors + 1, motorResolution, motorPower);
-  setupMotor(motors + 2, motorResolution, motorPower);
-  setupMotor(motors + 3, motorResolution, motorPower);
-  setupMotor(motors + 4, motorResolution, motorPower);
-  setupMotor(motors + 5, motorResolution, motorPower);
-  setupMotor(motors + 6, motorResolution, motorPower);
-
-  if(motorResolution == 0) console_send_str("256 microsteps");
-  if(motorResolution == 1) console_send_str("128 microsteps");
-  if(motorResolution == 2) console_send_str("64 microsteps");
-  if(motorResolution == 3) console_send_str("32 microsteps");
-  if(motorResolution == 4) console_send_str("16 microsteps");
-  if(motorResolution == 5) console_send_str("8 microsteps");
-  if(motorResolution == 6) console_send_str("4 microsteps");
-  if(motorResolution == 7) console_send_str("2 microsteps");
-  if(motorResolution == 8) console_send_str("no microsteps");
-
-  console_send_str(", power: ");
-  console_send_uint8(motorPower);
-  console_send_str("\r\n");
+  if(buf[0] == down) { singleStep(m, DIR_MAIN_AXIS_DOWN); }
+  if(buf[0] == DOWN) { multiStep(m, DIR_MAIN_AXIS_DOWN); }
 }
 
-void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
-  if(buf[0] == up) { backward(m); singleStep(m); }
-  if(buf[0] == UP) { backward(m); multiStep(m); }
+uint32_t parseLinearMotionConfig(
+  char *name,
+  uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  OutputSchedule *start, OutputSchedule *run, OutputSchedule *stop
+) {
+  pos = parseU32(&start->count, buf, pos, buf_len);
+  pos = parseU32(&start->timer, buf, pos, buf_len);
+  pos = parseU32(&start->dt, buf, pos, buf_len);
+  pos = parseU32(&start->ddt, buf, pos, buf_len);
+  pos = parseU32(&start->dddt, buf, pos, buf_len);
 
-  if(buf[0] == down) { forward(m); singleStep(m); }
-  if(buf[0] == DOWN) { forward(m); multiStep(m); }
+  pos = parseU32(&run->count, buf, pos, buf_len);
+  pos = parseU32(&run->timer, buf, pos, buf_len);
+  pos = parseU32(&run->dt, buf, pos, buf_len);
+  pos = parseU32(&run->ddt, buf, pos, buf_len);
+  pos = parseU32(&run->dddt, buf, pos, buf_len);
+
+  pos = parseU32(&stop->count, buf, pos, buf_len);
+  pos = parseU32(&stop->timer, buf, pos, buf_len);
+  pos = parseU32(&stop->dt, buf, pos, buf_len);
+  pos = parseU32(&stop->ddt, buf, pos, buf_len);
+  pos = parseU32(&stop->dddt, buf, pos, buf_len);
+
+  if(pos == ~0ull) {
+    console_send_str("Failed to parse\r\n");
+    return buf_len;
+  }
+
+  console_send_str("New ");
+  console_send_str(name);
+  console_send_str(" config: Start: ");
+  console_send_uint32(start->count); console_send_str(" ");
+  console_send_uint32(start->timer); console_send_str(" ");
+  console_send_uint32(start->dt); console_send_str(" ");
+  console_send_uint32(start->ddt); console_send_str(" ");
+  console_send_uint32(start->dddt); console_send_str("\r\n");
+  console_send_str("Run: ");
+  console_send_uint32(run->count); console_send_str(" ");
+  console_send_uint32(run->timer); console_send_str(" ");
+  console_send_uint32(run->dt); console_send_str(" ");
+  console_send_uint32(run->ddt); console_send_str(" ");
+  console_send_uint32(run->dddt); console_send_str("\r\n");
+  console_send_str("Stop: ");
+  console_send_uint32(stop->count); console_send_str(" ");
+  console_send_uint32(stop->timer); console_send_str(" ");
+  console_send_uint32(stop->dt); console_send_str(" ");
+  console_send_uint32(stop->ddt); console_send_str(" ");
+  console_send_uint32(stop->dddt); console_send_str("\r\n");
+
+  return pos;
+}
+
+uint32_t parseMotorScheduleConfig(
+  char *name,
+  uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  OutputSchedule *schedule
+) {
+  pos = parseU32(&schedule->count, buf, pos, buf_len);
+  pos = parseU32(&schedule->timer, buf, pos, buf_len);
+  pos = parseU32(&schedule->dt, buf, pos, buf_len);
+  pos = parseU32(&schedule->ddt, buf, pos, buf_len);
+  pos = parseU32(&schedule->dddt, buf, pos, buf_len);
+
+  if(pos == ~0ull) {
+    console_send_str("Failed to parse\r\n");
+    return buf_len;
+  }
+
+  console_send_str("New ");
+  console_send_str(name);
+  console_send_str(" config: ");
+  console_send_uint32(schedule->count); console_send_str(" ");
+  console_send_uint32(schedule->timer); console_send_str(" ");
+  console_send_uint32(schedule->dt); console_send_str(" ");
+  console_send_uint32(schedule->ddt); console_send_str(" ");
+  console_send_uint32(schedule->dddt); console_send_str("\r\n");
+
+  return pos;
 }
 
 static uint_fast8_t echoed = 0;
@@ -105,20 +164,6 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     interactiveMotor(buf, motors + 4, 'y', 'Y', 'i', 'I');
     interactiveMotor(buf, motors + 5, 'f', 'F', 'd', 'D');
     interactiveMotor(buf, motors + 6, 'g', 'G', 'h', 'H');
-
-    if(buf[0] == '1') { motorResolution = 0; updateMotors(); }
-    if(buf[0] == '2') { motorResolution = 1; updateMotors(); }
-    if(buf[0] == '3') { motorResolution = 2; updateMotors(); }
-    if(buf[0] == '4') { motorResolution = 3; updateMotors(); }
-    if(buf[0] == '5') { motorResolution = 4; updateMotors(); }
-    if(buf[0] == '6') { motorResolution = 5; updateMotors(); }
-    if(buf[0] == '7') { motorResolution = 6; updateMotors(); }
-    if(buf[0] == '8') { motorResolution = 7; updateMotors(); }
-    if(buf[0] == '9') { motorResolution = 8; updateMotors(); }
-    if(buf[0] == '/') { motorPower = 8; updateMotors(); }
-    if(buf[0] == '-') { motorPower = 16; updateMotors(); }
-    if(buf[0] == '+') { motorPower = 20; updateMotors(); }
-    if(buf[0] == '*') { motorPower = 24; updateMotors(); }
 
     if(buf[0] == ' ') {
       console_send_str("Interactive mode off.\r\n");
@@ -154,6 +199,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
 
   if(strncmp(cmd, "interactive", buf_len) == 0) {
     interactive = true;
+    console_send_str("Interactive mode\r\n");
   }
 
   if(strncmp(cmd, "tick:on", buf_len) == 0) {
@@ -178,44 +224,105 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     endstopScan();
   }
 
-  if(strncmp(cmd, "config:big_step", buf_len) == 0) {
+  if(strncmp(cmd, "stop", buf_len) == 0) {
+    homingStop();
+  }
+
+  if(strncmp(cmd, "home:up", buf_len) == 0) {
+    homingUpwards();
+  }
+
+  if(strncmp(cmd, "config:interactive:big_step", buf_len) == 0) {
     int pos = cmdEnd + 1;
 
-    pos = parseU32(&startTemplate.count, buf, pos, buf_len);
-    pos = parseU32(&startTemplate.dt, buf, pos, buf_len);
-    pos = parseU32(&startTemplate.ddt, buf, pos, buf_len);
-    pos = parseU32(&startTemplate.dddt, buf, pos, buf_len);
+    parseLinearMotionConfig("Big Step", buf, pos, buf_len, &startTemplate, &runTemplate, &stopTemplate);
+  }
 
-    pos = parseU32(&runTemplate.count, buf, pos, buf_len);
-    pos = parseU32(&runTemplate.dt, buf, pos, buf_len);
-    pos = parseU32(&runTemplate.ddt, buf, pos, buf_len);
-    pos = parseU32(&runTemplate.dddt, buf, pos, buf_len);
+  if(strncmp(cmd, "config:homing:threshold", buf_len) == 0) {
+    int pos = cmdEnd + 1;
 
-    pos = parseU32(&stopTemplate.count, buf, pos, buf_len);
-    pos = parseU32(&stopTemplate.dt, buf, pos, buf_len);
-    pos = parseU32(&stopTemplate.ddt, buf, pos, buf_len);
-    pos = parseU32(&stopTemplate.dddt, buf, pos, buf_len);
+    pos = parseU32(&homingThreshold, buf, pos, buf_len);
+
+    console_send_str("New homing threshold: ");
+    console_send_uint32(homingThreshold);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:endstop:init_duration", buf_len) == 0) {
+    int pos = cmdEnd + 1;
+
+    pos = parseU32(&endstopInitDuration, buf, pos, buf_len);
+
+    console_send_str("New endstop init duration: ");
+    console_send_uint32(endstopInitDuration);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:homing:step", buf_len) == 0) {
+    int pos = cmdEnd + 1;
+
+    parseMotorScheduleConfig("Homing Step", buf, pos, buf_len, &homingStep);
+  }
+
+  if(strncmp(cmd, "config:motor", buf_len) == 0) {
+    int pos = cmdEnd + 1;
+
+    uint32_t motor;
+    uint32_t steps;
+    uint32_t power;
+
+    pos = parseU32(&motor, buf, pos, buf_len);
+    pos = parseU32(&steps, buf, pos, buf_len);
+    pos = parseU32(&power, buf, pos, buf_len);
 
     if(pos == ~0ull) {
       console_send_str("Failed to parse\r\n");
       return buf_len;
     }
 
-    console_send_str("Start: ");
-    console_send_uint32(startTemplate.count); console_send_str(" ");
-    console_send_uint32(startTemplate.dt); console_send_str(" ");
-    console_send_uint32(startTemplate.ddt); console_send_str(" ");
-    console_send_uint32(startTemplate.dddt); console_send_str(" \r\n");
-    console_send_str("Run: ");
-    console_send_uint32(runTemplate.count); console_send_str(" ");
-    console_send_uint32(runTemplate.dt); console_send_str(" ");
-    console_send_uint32(runTemplate.ddt); console_send_str(" ");
-    console_send_uint32(runTemplate.dddt); console_send_str(" \r\n");
-    console_send_str("Stop: ");
-    console_send_uint32(stopTemplate.count); console_send_str(" ");
-    console_send_uint32(stopTemplate.dt); console_send_str(" ");
-    console_send_uint32(stopTemplate.ddt); console_send_str(" ");
-    console_send_uint32(stopTemplate.dddt); console_send_str(" \r\n");
+    if(motor > 7) {
+      console_send_str("Invalid motor index\r\n");
+      return buf_len;
+    }
+
+    switch(steps) {
+      case 256: steps = 0; break;
+      case 128: steps = 1; break;
+      case 64: steps = 2; break;
+      case 32: steps = 3; break;
+      case 16: steps = 4; break;
+      case 8: steps = 5; break;
+      case 4: steps = 6; break;
+      case 2: steps = 7; break;
+      case 1: steps = 8; break;
+      default:
+        console_send_str("Invalid microstep resolution\r\n");
+        return buf_len;
+    }
+
+    if(power > 31) {
+      console_send_str("Invalid motor power\r\n");
+      return buf_len;
+    }
+
+    setupMotor(motors + motor, steps, power);
+
+    console_send_str("Motor ");
+    console_send_uint8(motor);
+
+    if(steps == 0) console_send_str(": 256 microsteps");
+    if(steps == 1) console_send_str(": 128 microsteps");
+    if(steps == 2) console_send_str(": 64 microsteps");
+    if(steps == 3) console_send_str(": 32 microsteps");
+    if(steps == 4) console_send_str(": 16 microsteps");
+    if(steps == 5) console_send_str(": 8 microsteps");
+    if(steps == 6) console_send_str(": 4 microsteps");
+    if(steps == 7) console_send_str(": 2 microsteps");
+    if(steps == 8) console_send_str(": no microsteps");
+
+    console_send_str(", power: ");
+    console_send_uint8(power);
+    console_send_str("\r\n");
   }
 
   return buf_len;
@@ -232,15 +339,27 @@ void console_send_str(char *str) {
   console_send((uint8_t *)str, e - str);
 }
 
-void console_send_uint32(uint32_t val) {
-  uint8_t buf[36];
+void console_send_uint32(uint32_t n) {
+  uint8_t buf[49];
   uint32_t p = 35;
+  uint32_t val = n;
   for(uint32_t i = 0; i < 32; ++i) {
     buf[p--] = (val & 1)? '1': '0';
     if(i == 7 || i == 15 || i == 23) buf[p--] = ' ';
 
     val >>= 1;
   }
+
+  buf[36] = ' ';
+  buf[37] = '(';
+  p = 47;
+  val = n;
+  for(uint32_t i = 0; i < 10; ++i) {
+    buf[p--] = '0' + (val % 10);
+    val /= 10;
+  }
+
+  buf[48] = ')';
 
   console_send(buf, sizeof(buf));
 }
