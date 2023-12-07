@@ -1,0 +1,19 @@
+motors:on
+
+config:motor 0 256 8
+config:motor 1 256 8
+config:motor 2 256 8
+config:motor 3 256 8
+config:motor 4 256 8
+config:motor 5 256 8
+config:motor 6 256 8
+
+config:endstop:init_duration 400
+config:homing:threshold 3000 3050 3200 3300 30000
+# 10 RPM
+config:homing:step 50 0 73300775 0 0
+config:homing:clear 60000 0 73300775 0 0
+# 180 RPM
+config:interactive:big_step 3839 0 0 52776 0 23039 0 1319413953 0 0 3840 0 1319413953 4294914520 0
+
+tick:on

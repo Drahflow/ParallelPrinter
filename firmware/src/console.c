@@ -1,7 +1,9 @@
 #include "console.h"
 
+#ifndef TEST
 #include "usb.h"
 #include "motor.h"
+#endif
 #include "tick.h"
 #include "endstop.h"
 #include "homing.h"
@@ -21,11 +23,11 @@ OutputSchedule stop[MOTOR_COUNT];
 OutputSchedule singleSteps[MOTOR_COUNT];
 
 static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPos) {
-  if(pos == ~0ul) return pos;
+  if(pos == ~0u) return pos;
 
   *v = 0;
   while(buf[pos] == ' ' && pos < endPos) ++pos;
-  if(!(buf[pos] >= '0' && buf[pos] <= '9')) return ~0ul;
+  if(!(buf[pos] >= '0' && buf[pos] <= '9')) return ~0u;
 
   while(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9') {
     *v = 10 * *v + (buf[pos] - '0');
@@ -38,8 +40,8 @@ static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPo
 static void singleStep(Motor *m, uint8_t direction) {
   OutputSchedule *schedule = singleSteps + m->index;
   schedule->count = 1;
-  schedule->timer = ~0ul;
-  schedule->dt = ~0ul;
+  schedule->timer = ~0u;
+  schedule->dt = ~0u;
   schedule->next = NULL;
   schedule->dir = direction;
 
@@ -93,7 +95,7 @@ uint32_t parseLinearMotionConfig(
   pos = parseU32(&stop->ddt, buf, pos, buf_len);
   pos = parseU32(&stop->dddt, buf, pos, buf_len);
 
-  if(pos == ~0ull) {
+  if(pos == ~0u) {
     console_send_str("Failed to parse\r\n");
     return buf_len;
   }
@@ -133,7 +135,7 @@ uint32_t parseMotorScheduleConfig(
   pos = parseU32(&schedule->ddt, buf, pos, buf_len);
   pos = parseU32(&schedule->dddt, buf, pos, buf_len);
 
-  if(pos == ~0ull) {
+  if(pos == ~0u) {
     console_send_str("Failed to parse\r\n");
     return buf_len;
   }
@@ -206,6 +208,11 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     enableSystick();
     console_send_str("SysTick enabled\r\n");
   }
+  if(strncmp(cmd, "tick:off", buf_len) == 0) {
+    disableSystick();
+    console_send_str("SysTick disabled\r\n");
+  }
+
   if(strncmp(cmd, "motors:on", buf_len) == 0) {
     initMotorDrivers();
     console_send_str("Motors enabled\r\n");
@@ -228,28 +235,35 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     homingStop();
   }
 
-  if(strncmp(cmd, "home:up", buf_len) == 0) {
+  if(strncmp(cmd, "homing:up", buf_len) == 0) {
     homingUpwards();
   }
 
   if(strncmp(cmd, "config:interactive:big_step", buf_len) == 0) {
-    int pos = cmdEnd + 1;
+    uint32_t pos = cmdEnd + 1;
 
     parseLinearMotionConfig("Big Step", buf, pos, buf_len, &startTemplate, &runTemplate, &stopTemplate);
   }
 
   if(strncmp(cmd, "config:homing:threshold", buf_len) == 0) {
-    int pos = cmdEnd + 1;
+    uint32_t pos = cmdEnd + 1;
 
-    pos = parseU32(&homingThreshold, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdInitialRevert, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdMinimumAxisEffect, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdSingleAxisScan, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdInitialScan, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdRescan, buf, pos, buf_len);
 
-    console_send_str("New homing threshold: ");
-    console_send_uint32(homingThreshold);
-    console_send_str("\r\n");
+    console_send_str("New homing thresholds:\r\n");
+    console_send_uint32(homingThresholdInitialRevert); console_send_str("\r\n");
+    console_send_uint32(homingThresholdMinimumAxisEffect); console_send_str("\r\n");
+    console_send_uint32(homingThresholdSingleAxisScan); console_send_str("\r\n");
+    console_send_uint32(homingThresholdInitialScan); console_send_str("\r\n");
+    console_send_uint32(homingThresholdRescan); console_send_str("\r\n");
   }
 
   if(strncmp(cmd, "config:endstop:init_duration", buf_len) == 0) {
-    int pos = cmdEnd + 1;
+    uint32_t pos = cmdEnd + 1;
 
     pos = parseU32(&endstopInitDuration, buf, pos, buf_len);
 
@@ -259,13 +273,19 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   }
 
   if(strncmp(cmd, "config:homing:step", buf_len) == 0) {
-    int pos = cmdEnd + 1;
+    uint32_t pos = cmdEnd + 1;
 
     parseMotorScheduleConfig("Homing Step", buf, pos, buf_len, &homingStep);
   }
 
+  if(strncmp(cmd, "config:homing:clear", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    parseMotorScheduleConfig("Clearing Step", buf, pos, buf_len, &clearingStep);
+  }
+
   if(strncmp(cmd, "config:motor", buf_len) == 0) {
-    int pos = cmdEnd + 1;
+    uint32_t pos = cmdEnd + 1;
 
     uint32_t motor;
     uint32_t steps;
@@ -275,7 +295,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     pos = parseU32(&steps, buf, pos, buf_len);
     pos = parseU32(&power, buf, pos, buf_len);
 
-    if(pos == ~0ull) {
+    if(pos == ~0u) {
       console_send_str("Failed to parse\r\n");
       return buf_len;
     }
@@ -325,6 +345,26 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "debug:endstop:on", buf_len) == 0) {
+    endstopDebug = true;
+    console_send_str("Endstop debug enabled\r\n");
+  }
+
+  if(strncmp(cmd, "debug:endstop:off", buf_len) == 0) {
+    endstopDebug = false;
+    console_send_str("Endstop debug disabled\r\n");
+  }
+
+  if(strncmp(cmd, "debug:homing:on", buf_len) == 0) {
+    homingDebug = true;
+    console_send_str("Homing debug enabled\r\n");
+  }
+
+  if(strncmp(cmd, "debug:homing:off", buf_len) == 0) {
+    homingDebug = false;
+    console_send_str("Homing debug disabled\r\n");
+  }
+
   return buf_len;
 }
 
@@ -340,8 +380,8 @@ void console_send_str(char *str) {
 }
 
 void console_send_uint32(uint32_t n) {
-  uint8_t buf[49];
-  uint32_t p = 35;
+  uint8_t buf[48];
+  uint32_t p = 34;
   uint32_t val = n;
   for(uint32_t i = 0; i < 32; ++i) {
     buf[p--] = (val & 1)? '1': '0';
@@ -350,16 +390,16 @@ void console_send_uint32(uint32_t n) {
     val >>= 1;
   }
 
-  buf[36] = ' ';
-  buf[37] = '(';
-  p = 47;
+  buf[35] = ' ';
+  buf[36] = '(';
+  p = 46;
   val = n;
   for(uint32_t i = 0; i < 10; ++i) {
     buf[p--] = '0' + (val % 10);
     val /= 10;
   }
 
-  buf[48] = ')';
+  buf[47] = ')';
 
   console_send(buf, sizeof(buf));
 }

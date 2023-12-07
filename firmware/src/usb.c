@@ -1047,8 +1047,8 @@ usb_state_ready(void)
     }
 }
 
-static uint8_t transmit_buf[192], transmit_pos;
-static uint8_t receive_buf[256], receive_pos;
+static uint8_t transmit_buf[512], transmit_pos;
+static uint8_t receive_buf[512], receive_pos;
 
 void usb_ep0_task(void)
 {

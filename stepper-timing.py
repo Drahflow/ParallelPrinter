@@ -1,23 +1,24 @@
 #!/usr/bin/python3
 
 RPM = 10.0
-Startup = 0.05 # second
-Run = 0.15 # second
-Stop = 0.05 # second
+Startup = 0.02 # second
+Run = 0.05 # second
+Stop = 0.02 # second
 Microsteps = 256
 
 pulsesPerSecond = RPM / 60 * Microsteps * 200
 
-runDt = int(pulsesPerSecond / 2000000 * 2 ** 32)
-startDDT = int(runDt / Startup / 2000000)
-stopDDT = 2 ** 32 - int(runDt / Stop / 2000000)
+tickFrequency = 500000
+runDt = int(pulsesPerSecond / tickFrequency * 2 ** 32)
+startDDT = int(runDt / Startup / tickFrequency)
+stopDDT = 2 ** 32 - int(runDt / Stop / tickFrequency)
 
 startPulses = 0
 runPulses = 0
 stopPulses = 0
 dt = 0
 t = 0
-for i in range(int(2000000 * Startup)):
+for i in range(int(tickFrequency * Startup)):
     if t > 2 ** 32:
         t -= 2 ** 32
         startPulses = startPulses + 1
@@ -26,7 +27,7 @@ for i in range(int(2000000 * Startup)):
 
 t = 0
 dt = runDt
-for i in range(int(2000000 * Run)):
+for i in range(int(tickFrequency * Run)):
     if t > 2 ** 32:
         t -= 2 ** 32
         runPulses = runPulses + 1
@@ -34,7 +35,7 @@ for i in range(int(2000000 * Run)):
 
 t = 0
 dt = runDt
-for i in range(int(2000000 * Stop)):
+for i in range(int(tickFrequency * Stop)):
     if t > 2 ** 32:
         t -= 2 ** 32
         stopPulses = stopPulses + 1

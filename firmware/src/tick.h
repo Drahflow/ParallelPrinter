@@ -27,6 +27,7 @@ typedef enum {
 } EndstopState;
 
 void enableSystick();
+void disableSystick();
 void SysTick_IRQ_Handler();
 
 void scheduleMotor(uint32_t index, OutputSchedule *);
@@ -35,6 +36,7 @@ void stopEndstopScan();
 
 extern EndstopState endstopState;
 extern uint32_t endstopInitDuration;
+extern uint32_t endstopWaitDuration;
 extern uint32_t endstopDuration;
 
 bool motorsMoving();

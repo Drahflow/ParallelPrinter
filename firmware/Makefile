@@ -31,3 +31,7 @@ build/%.o: lib/%.c
 flash: build/firmware.bin
 	scp build/firmware.bin root@192.168.3.3:3dprinter-fw.bin
 	ssh root@192.168.3.3 ./flash_usb.py -d 0483:df11 -t stm32h7 -s 0x8020000 3dprinter-fw.bin
+
+test/%: test/%.c src/*.c src/*.h
+	gcc -Wall -Wextra -ggdb -o $@ $<
+	valgrind $@

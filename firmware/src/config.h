@@ -19,7 +19,8 @@
 #define CONFIG_CLOCK_REF_FREQ 25000000
 
 #define CONFIG_CLOCK_FREQ 400000000
-#define CONFIG_TICK_FREQ    2000000
+// #define CONFIG_TICK_FREQ    2000000
+#define CONFIG_TICK_FREQ     500000
 
 // Signature to set in memory to flag that a dfu reboot is requested
 #define USB_BOOT_FLAG 0x55534220424f4f54 // "USB BOOT"

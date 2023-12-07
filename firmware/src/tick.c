@@ -16,6 +16,12 @@ void enableSystick() {
     SysTick_CTRL_ENABLE_Msk;
 }
 
+void disableSystick() {
+  SysTick->LOAD = CONFIG_CLOCK_FREQ / CONFIG_TICK_FREQ - 1u;
+  SysTick->VAL = 0;
+  SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk;
+}
+
 OutputSchedule *m0sched = NULL;
 OutputSchedule *m1sched = NULL;
 OutputSchedule *m2sched = NULL;
@@ -65,6 +71,7 @@ uint32_t m9pulse = 0;
 
 EndstopState endstopState;
 uint32_t endstopDuration;
+uint32_t endstopWaitDuration;
 uint32_t endstopInitDuration = 1000;
 
 void SysTick_IRQ_Handler() {
@@ -88,9 +95,12 @@ void SysTick_IRQ_Handler() {
       GPIOF->MODER = (GPIOF->MODER & ~endstop_msk) | (0 << (endstop_pin * 2));
       GPIOF->PUPDR = (GPIOF->PUPDR & ~endstop_msk) | (0 << (endstop_pin * 2));
       endstopState = ENDSTOP_WAIT;
+      endstopWaitDuration = 0;
       break;
 
     case ENDSTOP_WAIT:
+      ++endstopWaitDuration;
+
       if(endstop_pin_high()) break;
 
       endstopState = ENDSTOP_SCAN;
@@ -114,6 +124,7 @@ void SysTick_IRQ_Handler() {
 void scheduleEndstopScan() {
   endstopState = ENDSTOP_INIT;
   endstopDuration = 0;
+  endstopWaitDuration = 0;
 }
 
 void stopEndstopScan() {

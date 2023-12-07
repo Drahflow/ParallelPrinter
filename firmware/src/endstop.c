@@ -6,6 +6,8 @@
 
 #include <stdbool.h>
 
+bool endstopDebug = false;
+
 void endstopOn() {
   stopEndstopScan();
 
@@ -24,8 +26,12 @@ void endstopFloat() {
   gpio_in_setup(GPIO('F', 0), 0);
 }
 
+bool endstopInitializing() {
+  return endstopState == ENDSTOP_INIT || endstopState == ENDSTOP_WAIT;
+}
+
 bool endstopScanning() {
-  return endstopState == ENDSTOP_SCAN;
+  return endstopState == ENDSTOP_INIT || endstopState == ENDSTOP_WAIT || endstopState == ENDSTOP_SCAN;
 }
 
 void endstopScan() {
@@ -40,18 +46,20 @@ void runEndstop() {
     oldState = endstopState;
     switch(endstopState) {
       case ENDSTOP_INIT:
-        console_send_str("Endstop init.\r\n");
+        if(endstopDebug) console_send_str("Endstop init.\r\n");
         break;
       case ENDSTOP_WAIT:
-        console_send_str("Endstop high.\r\n");
+        if(endstopDebug) console_send_str("Endstop high.\r\n");
         break;
       case ENDSTOP_SCAN:
-        console_send_str("Endstop low.\r\n");
+        if(endstopDebug) console_send_str("Endstop low.\r\n");
         break;
       case ENDSTOP_DONE:
-        console_send_str("Endstop done: ");
-        console_send_uint32(endstopDuration);
-        console_send_str("\r\n");
+        if(endstopDebug) {
+          console_send_str("Endstop done and took: ");
+          console_send_uint32(endstopDuration);
+          console_send_str("\r\n");
+        }
         break;
       default:
         console_send_str("Endstop undefined state.\r\n");

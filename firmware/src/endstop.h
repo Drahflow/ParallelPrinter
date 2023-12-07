@@ -11,7 +11,9 @@ void endstopOff();
 void endstopFloat();
 void endstopScan();
 
+bool endstopInitializing();
 bool endstopScanning();
-uint32_t endstopScanTime();
+
+extern bool endstopDebug;
 
 #endif
