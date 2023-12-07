@@ -97,7 +97,7 @@ uint32_t parseLinearMotionConfig(
 
   if(pos == ~0u) {
     console_send_str("Failed to parse\r\n");
-    return buf_len;
+    return ~0u;
   }
 
   console_send_str("New ");
@@ -137,7 +137,7 @@ uint32_t parseMotorScheduleConfig(
 
   if(pos == ~0u) {
     console_send_str("Failed to parse\r\n");
-    return buf_len;
+    return ~0u;
   }
 
   console_send_str("New ");
@@ -148,6 +148,34 @@ uint32_t parseMotorScheduleConfig(
   console_send_uint32(schedule->dt); console_send_str(" ");
   console_send_uint32(schedule->ddt); console_send_str(" ");
   console_send_uint32(schedule->dddt); console_send_str("\r\n");
+
+  return pos;
+}
+
+uint32_t rawMoveAxis(uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t dir) {
+  uint32_t axis;
+  pos = parseU32(&axis, buf, pos, buf_len);
+
+  if(axis >= MOTOR_COUNT) {
+    console_send_str("Axis index too large.\r\n");
+    return ~0u;
+  }
+
+  pos = parseLinearMotionConfig("Step", buf, pos, buf_len, &start[axis], &run[axis], &stop[axis]);
+
+  if(pos == ~0u) {
+    console_send_str("Not moving after parse problem.\r\n");
+    return ~0u;
+  }
+
+  start[axis].dir = dir;
+  run[axis].dir = dir;
+  stop[axis].dir = dir;
+  start[axis].next = &run[axis];
+  run[axis].next = &stop[axis];
+  stop[axis].next = NULL;
+
+  scheduleMotor(axis, &start[axis]);
 
   return pos;
 }
@@ -237,6 +265,18 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
 
   if(strncmp(cmd, "homing:up", buf_len) == 0) {
     homingUpwards();
+  }
+
+  if(strncmp(cmd, "move:axis:up", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    rawMoveAxis(buf, pos, buf_len, DIR_MAIN_AXIS_UP);
+  }
+
+  if(strncmp(cmd, "move:axis:down", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    rawMoveAxis(buf, pos, buf_len, DIR_MAIN_AXIS_DOWN);
   }
 
   if(strncmp(cmd, "config:interactive:big_step", buf_len) == 0) {
