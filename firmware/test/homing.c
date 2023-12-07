@@ -29,6 +29,7 @@ void usb_console_send(uint8_t *buf, uint32_t len) {
   printf("%.*s", len, buf);
 }
 void enableSystick() { }
+void disableSystick() { }
 
 OutputSchedule *schedules[MOTOR_COUNT];
 void scheduleMotor(uint32_t index, OutputSchedule *schedule) {
@@ -97,10 +98,12 @@ int main(void) {
   for(int i = 0; i < MOTOR_COUNT; ++i) schedules[i] = NULL;
   homingThresholdInitialRevert = 3;
   homingThresholdMinimumAxisEffect = 4;
+  homingThresholdFineScan = 4;
   homingThresholdSingleAxisScan = 4;
   homingThresholdInitialScan = 5;
   homingStep.count = 3;
   clearingStep.count = 5;
+  fineStep.count = 1;
 
   homingUpwards();
 

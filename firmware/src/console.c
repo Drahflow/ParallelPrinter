@@ -250,6 +250,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
 
     pos = parseU32(&homingThresholdInitialRevert, buf, pos, buf_len);
     pos = parseU32(&homingThresholdMinimumAxisEffect, buf, pos, buf_len);
+    pos = parseU32(&homingThresholdFineScan, buf, pos, buf_len);
     pos = parseU32(&homingThresholdSingleAxisScan, buf, pos, buf_len);
     pos = parseU32(&homingThresholdInitialScan, buf, pos, buf_len);
     pos = parseU32(&homingThresholdRescan, buf, pos, buf_len);
@@ -257,6 +258,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("New homing thresholds:\r\n");
     console_send_uint32(homingThresholdInitialRevert); console_send_str("\r\n");
     console_send_uint32(homingThresholdMinimumAxisEffect); console_send_str("\r\n");
+    console_send_uint32(homingThresholdFineScan); console_send_str("\r\n");
     console_send_uint32(homingThresholdSingleAxisScan); console_send_str("\r\n");
     console_send_uint32(homingThresholdInitialScan); console_send_str("\r\n");
     console_send_uint32(homingThresholdRescan); console_send_str("\r\n");
@@ -272,7 +274,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
-  if(strncmp(cmd, "config:homing:step", buf_len) == 0) {
+  if(strncmp(cmd, "config:homing:scan", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 
     parseMotorScheduleConfig("Homing Step", buf, pos, buf_len, &homingStep);
@@ -282,6 +284,12 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     uint32_t pos = cmdEnd + 1;
 
     parseMotorScheduleConfig("Clearing Step", buf, pos, buf_len, &clearingStep);
+  }
+
+  if(strncmp(cmd, "config:homing:fine", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    parseMotorScheduleConfig("Homing Fine Step", buf, pos, buf_len, &fineStep);
   }
 
   if(strncmp(cmd, "config:motor", buf_len) == 0) {

@@ -10,12 +10,14 @@
 // In numeric order
 extern uint32_t homingThresholdInitialRevert;
 extern uint32_t homingThresholdMinimumAxisEffect;
+extern uint32_t homingThresholdFineScan;
 extern uint32_t homingThresholdSingleAxisScan;
 extern uint32_t homingThresholdInitialScan;
 extern uint32_t homingThresholdRescan;
 
 extern OutputSchedule homingStep;
 extern OutputSchedule clearingStep;
+extern OutputSchedule fineStep;
 
 void runHoming();
 void homingStop();

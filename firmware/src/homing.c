@@ -9,8 +9,10 @@
 
 OutputSchedule homingStep;
 OutputSchedule clearingStep;
+OutputSchedule fineStep;
 uint32_t homingThresholdInitialRevert;
 uint32_t homingThresholdMinimumAxisEffect;
+uint32_t homingThresholdFineScan;
 uint32_t homingThresholdSingleAxisScan;
 uint32_t homingThresholdInitialScan;
 uint32_t homingThresholdRescan;
@@ -180,6 +182,57 @@ void runHoming() {
         yield;
       }
     }
+
+    console_send_str("Starting precision homing pass.\r\n");
+
+    static int axis;
+    for(axis = 0; axis < AXES_TO_HOME; ++axis) {
+      console_send_str("Precision homing axis ");
+      console_send_uint8(axis);
+      console_send_str("\r\n");
+
+      memcpy(&scheduledStep[axis], &clearingStep, sizeof(OutputSchedule));
+      scheduledStep[axis].next = NULL;
+      scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
+      scheduleMotor(axis, &scheduledStep[axis]);
+      yield;
+
+      while(true) {
+        activeHomingThreshold = homingThresholdInitialRevert;
+        endstopScan();
+        yield;
+
+        if(endstopClear) break;
+
+        memcpy(&scheduledStep[axis], &fineStep, sizeof(OutputSchedule));
+        scheduledStep[axis].next = NULL;
+        scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
+        scheduleMotor(axis, &scheduledStep[axis]);
+        yield;
+      }
+        
+      while(true) {
+        activeHomingThreshold = homingThresholdFineScan;
+        endstopScan();
+        yield;
+        
+        if(!endstopClear) break;
+
+        memcpy(&scheduledStep[axis], &fineStep, sizeof(OutputSchedule));
+        scheduledStep[axis].next = NULL;
+        scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
+        scheduleMotor(axis, &scheduledStep[axis]);
+        yield;
+      }
+
+      memcpy(&scheduledStep[axis], &clearingStep, sizeof(OutputSchedule));
+      scheduledStep[axis].next = NULL;
+      scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
+      scheduleMotor(axis, &scheduledStep[axis]);
+      yield;
+    }
+
+    console_send_str("Homing complete.\r\n");
 
     homingState = -1;
   }}
