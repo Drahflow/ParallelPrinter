@@ -16,8 +16,8 @@ extern uint32_t homingThresholdInitialScan;
 extern uint32_t homingThresholdRescan;
 
 extern OutputSchedule homingStep;
-extern OutputSchedule clearingStep;
-extern OutputSchedule fineStep;
+extern OutputSchedule homingClearingStep;
+extern OutputSchedule homingFineStep;
 
 void runHoming();
 void homingStop();

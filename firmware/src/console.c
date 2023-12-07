@@ -283,13 +283,13 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   if(strncmp(cmd, "config:homing:clear", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 
-    parseMotorScheduleConfig("Clearing Step", buf, pos, buf_len, &clearingStep);
+    parseMotorScheduleConfig("Clearing Step", buf, pos, buf_len, &homingClearingStep);
   }
 
   if(strncmp(cmd, "config:homing:fine", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 
-    parseMotorScheduleConfig("Homing Fine Step", buf, pos, buf_len, &fineStep);
+    parseMotorScheduleConfig("Homing Fine Step", buf, pos, buf_len, &homingFineStep);
   }
 
   if(strncmp(cmd, "config:motor", buf_len) == 0) {

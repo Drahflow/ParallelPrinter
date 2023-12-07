@@ -102,8 +102,8 @@ int main(void) {
   homingThresholdSingleAxisScan = 4;
   homingThresholdInitialScan = 5;
   homingStep.count = 3;
-  clearingStep.count = 5;
-  fineStep.count = 1;
+  homingClearingStep.count = 5;
+  homingFineStep.count = 1;
 
   homingUpwards();
 

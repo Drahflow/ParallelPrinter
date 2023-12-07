@@ -8,8 +8,8 @@
 #include <string.h>
 
 OutputSchedule homingStep;
-OutputSchedule clearingStep;
-OutputSchedule fineStep;
+OutputSchedule homingClearingStep;
+OutputSchedule homingFineStep;
 uint32_t homingThresholdInitialRevert;
 uint32_t homingThresholdMinimumAxisEffect;
 uint32_t homingThresholdFineScan;
@@ -160,7 +160,7 @@ void runHoming() {
           console_send_uint32(homedAxes);
           console_send_str("\r\n");
 
-          memcpy(&scheduledStep[axis], &clearingStep, sizeof(OutputSchedule));
+          memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
           scheduledStep[axis].next = NULL;
           scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
           scheduleMotor(axis, &scheduledStep[axis]);
@@ -175,7 +175,7 @@ void runHoming() {
         console_send_uint32(homedAxes);
         console_send_str("\r\n");
 
-        memcpy(&scheduledStep[maximumAxis], &clearingStep, sizeof(OutputSchedule));
+        memcpy(&scheduledStep[maximumAxis], &homingClearingStep, sizeof(OutputSchedule));
         scheduledStep[maximumAxis].next = NULL;
         scheduledStep[maximumAxis].dir = DIR_MAIN_AXIS_DOWN;
         scheduleMotor(maximumAxis, &scheduledStep[maximumAxis]);
@@ -191,7 +191,7 @@ void runHoming() {
       console_send_uint8(axis);
       console_send_str("\r\n");
 
-      memcpy(&scheduledStep[axis], &clearingStep, sizeof(OutputSchedule));
+      memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
       scheduledStep[axis].next = NULL;
       scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
       scheduleMotor(axis, &scheduledStep[axis]);
@@ -204,7 +204,7 @@ void runHoming() {
 
         if(endstopClear) break;
 
-        memcpy(&scheduledStep[axis], &fineStep, sizeof(OutputSchedule));
+        memcpy(&scheduledStep[axis], &homingFineStep, sizeof(OutputSchedule));
         scheduledStep[axis].next = NULL;
         scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
         scheduleMotor(axis, &scheduledStep[axis]);
@@ -218,14 +218,14 @@ void runHoming() {
         
         if(!endstopClear) break;
 
-        memcpy(&scheduledStep[axis], &fineStep, sizeof(OutputSchedule));
+        memcpy(&scheduledStep[axis], &homingFineStep, sizeof(OutputSchedule));
         scheduledStep[axis].next = NULL;
         scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
         scheduleMotor(axis, &scheduledStep[axis]);
         yield;
       }
 
-      memcpy(&scheduledStep[axis], &clearingStep, sizeof(OutputSchedule));
+      memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
       scheduledStep[axis].next = NULL;
       scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
       scheduleMotor(axis, &scheduledStep[axis]);
