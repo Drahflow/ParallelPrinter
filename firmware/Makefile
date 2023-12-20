@@ -4,7 +4,7 @@ CC=$(CROSS_PREFIX)-gcc
 OBJCOPY=$(CROSS_PREFIX)-objcopy
 CFLAGS=-mcpu=cortex-m7 -mthumb -Ilib -Ilib/cmsis-core \
        -ffunction-sections -fdata-sections \
-       -Wall
+       -Wall -O3
 SOURCES=$(wildcard src/*.c)
 LIBS=$(wildcard lib/*.c)
 
@@ -25,6 +25,9 @@ build/firmware.elf: src/stm32h723ze.ld $(OBJECTS)
 build/%.o: src/%.c src/*.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+build/%.S: src/%.c src/*.h
+	$(CC) $(CFLAGS) -c -S -o $@ $<
+
 build/%.o: lib/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -33,5 +36,5 @@ flash: build/firmware.bin
 	ssh root@192.168.3.3 ./flash_usb.py -d 0483:df11 -t stm32h7 -s 0x8020000 3dprinter-fw.bin
 
 test/%: test/%.c src/*.c src/*.h
-	gcc -Wall -Wextra -ggdb -o $@ $<
+	gcc -Wall -Wextra -ggdb -o $@ $< -lm
 	valgrind $@

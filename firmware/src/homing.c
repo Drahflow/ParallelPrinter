@@ -7,9 +7,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-OutputSchedule homingStep;
-OutputSchedule homingClearingStep;
-OutputSchedule homingFineStep;
+MotorSchedule homingStep;
+MotorSchedule homingClearingStep;
+MotorSchedule homingFineStep;
 uint32_t homingThresholdInitialRevert;
 uint32_t homingThresholdMinimumAxisEffect;
 uint32_t homingThresholdFineScan;
@@ -22,8 +22,7 @@ bool homingDebug = false;
 uint32_t activeHomingThreshold;
 static int homingState = -1;
 
-#define AXES_TO_HOME 7
-static OutputSchedule scheduledStep[AXES_TO_HOME];
+static OutputSchedule scheduledSteps;
 
 #define coroutine } switch(homingState) { case 0:
 #define yield do { homingState = __LINE__; return; case __LINE__:; } while (0)
@@ -59,20 +58,20 @@ void runHoming() {
     }
 
     static uint32_t homedAxes;
-    for(homedAxes = 0; homedAxes ^ ((1 << AXES_TO_HOME) - 1); ) {
+    for(homedAxes = 0; homedAxes ^ ((1 << MAIN_AXIS_COUNT) - 1); ) {
       activeHomingThreshold = homingThresholdInitialScan;
 
       endstopScan();
       yield;
       while(endstopClear) {
-        for(int axis = 0; axis < AXES_TO_HOME; ++axis) {
+        scheduledSteps = noSteps;
+        for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
           if(homedAxes & (1 << axis)) continue;
 
-          memcpy(&scheduledStep[axis], &homingStep, sizeof(OutputSchedule));
-          scheduledStep[axis].next = NULL;
-          scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
-          scheduleMotor(axis, &scheduledStep[axis]);
+          scheduledSteps.motors[axis] = homingStep;
+          scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_UP;
         }
+        scheduleMotors(&scheduledSteps);
         yield;
 
         endstopScan();
@@ -86,14 +85,14 @@ void runHoming() {
       endstopScan();
       yield;
       while(!endstopClear) {
-        for(int axis = 0; axis < AXES_TO_HOME; ++axis) {
+        scheduledSteps = noSteps;
+        for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
           if(homedAxes & (1 << axis)) continue;
 
-          memcpy(&scheduledStep[axis], &homingStep, sizeof(OutputSchedule));
-          scheduledStep[axis].next = NULL;
-          scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
-          scheduleMotor(axis, &scheduledStep[axis]);
+          scheduledSteps.motors[axis] = homingStep;
+          scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_DOWN;
         }
+        scheduleMotors(&scheduledSteps);
         yield;
 
         ++unblockSteps;
@@ -111,16 +110,16 @@ void runHoming() {
       static uint32_t maximumEndstopDuration; maximumEndstopDuration = homingThresholdMinimumAxisEffect - 1;
 
       static int axis;
-      for(axis = 0; axis < AXES_TO_HOME; ++axis) {
+      for(axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
         if(homedAxes & (1 << axis)) continue;
 
         {
           static int i;
           for(i = 0; i < unblockSteps; ++i) {
-            memcpy(&scheduledStep[axis], &homingStep, sizeof(OutputSchedule));
-            scheduledStep[axis].next = NULL;
-            scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
-            scheduleMotor(axis, &scheduledStep[axis]);
+            scheduledSteps = noSteps;
+            scheduledSteps.motors[axis] = homingStep;
+            scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_UP;
+            scheduleMotors(&scheduledSteps);
             yield;
           }
         }
@@ -144,10 +143,10 @@ void runHoming() {
         {
           static int i;
           for(i = 0; i < unblockSteps; ++i) {
-            memcpy(&scheduledStep[axis], &homingStep, sizeof(OutputSchedule));
-            scheduledStep[axis].next = NULL;
-            scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
-            scheduleMotor(axis, &scheduledStep[axis]);
+            scheduledSteps = noSteps;
+            scheduledSteps.motors[axis] = homingStep;
+            scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_DOWN;
+            scheduleMotors(&scheduledSteps);
             yield;
           }
         }
@@ -160,10 +159,10 @@ void runHoming() {
           console_send_uint32(homedAxes);
           console_send_str("\r\n");
 
-          memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
-          scheduledStep[axis].next = NULL;
-          scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
-          scheduleMotor(axis, &scheduledStep[axis]);
+          scheduledSteps = noSteps;
+          scheduledSteps.motors[axis] = homingClearingStep;
+          scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_DOWN;
+          scheduleMotors(&scheduledSteps);
           yield;
         }
       }
@@ -175,10 +174,10 @@ void runHoming() {
         console_send_uint32(homedAxes);
         console_send_str("\r\n");
 
-        memcpy(&scheduledStep[maximumAxis], &homingClearingStep, sizeof(OutputSchedule));
-        scheduledStep[maximumAxis].next = NULL;
-        scheduledStep[maximumAxis].dir = DIR_MAIN_AXIS_DOWN;
-        scheduleMotor(maximumAxis, &scheduledStep[maximumAxis]);
+        scheduledSteps = noSteps;
+        scheduledSteps.motors[maximumAxis] = homingClearingStep;
+        scheduledSteps.motors[maximumAxis].dir = DIR_MAIN_AXIS_DOWN;
+        scheduleMotors(&scheduledSteps);
         yield;
       }
     }
@@ -186,15 +185,15 @@ void runHoming() {
     console_send_str("Starting precision homing pass.\r\n");
 
     static int axis;
-    for(axis = 0; axis < AXES_TO_HOME; ++axis) {
+    for(axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
       console_send_str("Precision homing axis ");
       console_send_uint8(axis);
       console_send_str("\r\n");
 
-      memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
-      scheduledStep[axis].next = NULL;
-      scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
-      scheduleMotor(axis, &scheduledStep[axis]);
+      scheduledSteps = noSteps;
+      scheduledSteps.motors[axis] = homingClearingStep;
+      scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_UP;
+      scheduleMotors(&scheduledSteps);
       yield;
 
       while(true) {
@@ -204,10 +203,10 @@ void runHoming() {
 
         if(endstopClear) break;
 
-        memcpy(&scheduledStep[axis], &homingFineStep, sizeof(OutputSchedule));
-        scheduledStep[axis].next = NULL;
-        scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
-        scheduleMotor(axis, &scheduledStep[axis]);
+        scheduledSteps = noSteps;
+        scheduledSteps.motors[axis] = homingFineStep;
+        scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_DOWN;
+        scheduleMotors(&scheduledSteps);
         yield;
       }
         
@@ -218,17 +217,17 @@ void runHoming() {
         
         if(!endstopClear) break;
 
-        memcpy(&scheduledStep[axis], &homingFineStep, sizeof(OutputSchedule));
-        scheduledStep[axis].next = NULL;
-        scheduledStep[axis].dir = DIR_MAIN_AXIS_UP;
-        scheduleMotor(axis, &scheduledStep[axis]);
+        scheduledSteps = noSteps;
+        scheduledSteps.motors[axis] = homingFineStep;
+        scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_UP;
+        scheduleMotors(&scheduledSteps);
         yield;
       }
 
-      memcpy(&scheduledStep[axis], &homingClearingStep, sizeof(OutputSchedule));
-      scheduledStep[axis].next = NULL;
-      scheduledStep[axis].dir = DIR_MAIN_AXIS_DOWN;
-      scheduleMotor(axis, &scheduledStep[axis]);
+      scheduledSteps = noSteps;
+      scheduledSteps.motors[axis] = homingClearingStep;
+      scheduledSteps.motors[axis].dir = DIR_MAIN_AXIS_DOWN;
+      scheduleMotors(&scheduledSteps);
       yield;
     }
 

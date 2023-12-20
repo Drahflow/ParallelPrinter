@@ -12,15 +12,15 @@
 #include <string.h>
 #include <stdbool.h>
 
-OutputSchedule startTemplate;
-OutputSchedule runTemplate;
-OutputSchedule stopTemplate;
+MotorSchedule startTemplate;
+MotorSchedule runTemplate;
+MotorSchedule stopTemplate;
 
-OutputSchedule start[MOTOR_COUNT];
-OutputSchedule run[MOTOR_COUNT];
-OutputSchedule stop[MOTOR_COUNT];
+OutputSchedule start;
+OutputSchedule run;
+OutputSchedule stop;
 
-OutputSchedule singleSteps[MOTOR_COUNT];
+OutputSchedule oneStep;
 
 static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPos) {
   if(pos == ~0u) return pos;
@@ -38,30 +38,35 @@ static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPo
 }
 
 static void singleStep(Motor *m, uint8_t direction) {
-  OutputSchedule *schedule = singleSteps + m->index;
-  schedule->count = 1;
-  schedule->timer = ~0u;
-  schedule->dt = ~0u;
-  schedule->next = NULL;
-  schedule->dir = direction;
+  oneStep = noSteps;
 
-  scheduleMotor(m->index, schedule);
+  MotorSchedule *motor = oneStep.motors + m->index;
+  motor->count = 1;
+  motor->timer = ~0u;
+  motor->dt = ~0u;
+  motor->dir = direction;
+  oneStep.next = NULL;
+
+  scheduleMotors(&oneStep);
 }
 
 static void multiStep(Motor *m, uint8_t direction) {
-  memcpy(&start[m->index], &startTemplate, sizeof(OutputSchedule));
-  memcpy(&run[m->index], &runTemplate, sizeof(OutputSchedule));
-  memcpy(&stop[m->index], &stopTemplate, sizeof(OutputSchedule));
+  start = noSteps;
+  run = noSteps;
+  stop = noSteps;
 
-  start[m->index].dir = direction;
-  run[m->index].dir = direction;
-  stop[m->index].dir = direction;
+  start.motors[m->index] = startTemplate;
+  run.motors[m->index] = runTemplate;
+  stop.motors[m->index] = stopTemplate;
 
-  start[m->index].next = &run[m->index];
-  run[m->index].next = &stop[m->index];
-  stop[m->index].next = NULL;
+  start.motors[m->index].dir = direction;
+  run.motors[m->index].dir = direction;
+  stop.motors[m->index].dir = direction;
 
-  scheduleMotor(m->index, &start[m->index]);
+  start.next = &run;
+  run.next = &stop;
+
+  scheduleMotors(&start);
 }
 
 void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
@@ -75,7 +80,7 @@ void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char 
 uint32_t parseLinearMotionConfig(
   char *name,
   uint8_t *buf, uint32_t pos, uint32_t buf_len,
-  OutputSchedule *start, OutputSchedule *run, OutputSchedule *stop
+  MotorSchedule *start, MotorSchedule *run, MotorSchedule *stop
 ) {
   pos = parseU32(&start->count, buf, pos, buf_len);
   pos = parseU32(&start->timer, buf, pos, buf_len);
@@ -127,7 +132,7 @@ uint32_t parseLinearMotionConfig(
 uint32_t parseMotorScheduleConfig(
   char *name,
   uint8_t *buf, uint32_t pos, uint32_t buf_len,
-  OutputSchedule *schedule
+  MotorSchedule *schedule
 ) {
   pos = parseU32(&schedule->count, buf, pos, buf_len);
   pos = parseU32(&schedule->timer, buf, pos, buf_len);
@@ -161,21 +166,26 @@ uint32_t rawMoveAxis(uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t dir) 
     return ~0u;
   }
 
-  pos = parseLinearMotionConfig("Step", buf, pos, buf_len, &start[axis], &run[axis], &stop[axis]);
+  start = noSteps;
+  run = noSteps;
+  stop = noSteps;
+
+  pos = parseLinearMotionConfig("Step", buf, pos, buf_len, &start.motors[axis], &run.motors[axis], &stop.motors[axis]);
 
   if(pos == ~0u) {
     console_send_str("Not moving after parse problem.\r\n");
     return ~0u;
   }
 
-  start[axis].dir = dir;
-  run[axis].dir = dir;
-  stop[axis].dir = dir;
-  start[axis].next = &run[axis];
-  run[axis].next = &stop[axis];
-  stop[axis].next = NULL;
+  start.motors[axis].dir = dir;
+  run.motors[axis].dir = dir;
+  stop.motors[axis].dir = dir;
 
-  scheduleMotor(axis, &start[axis]);
+  start.next = &run;
+  run.next = &stop;
+  stop.next = NULL;
+
+  scheduleMotors(&start);
 
   return pos;
 }

@@ -19,13 +19,13 @@
 #define CONFIG_CLOCK_REF_FREQ 25000000
 
 #define CONFIG_CLOCK_FREQ 400000000
-// #define CONFIG_TICK_FREQ    2000000
 #define CONFIG_TICK_FREQ     500000
 
 // Signature to set in memory to flag that a dfu reboot is requested
 #define USB_BOOT_FLAG 0x55534220424f4f54 // "USB BOOT"
 #define USB_BOOT_FLAG_ADDR (0x24000000 + 0x8000) // Place flag in "AXI SRAM"
 
-#define MOTOR_COUNT 7
+#define MOTOR_COUNT 10
+#define MAIN_AXIS_COUNT 7
 
 #endif

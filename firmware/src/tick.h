@@ -9,15 +9,23 @@
 #define DIR_MAIN_AXIS_UP 0
 #define DIR_MAIN_AXIS_DOWN 1
 
-typedef struct OutputSchedule {
+typedef struct MotorSchedule {
   uint32_t count;
   uint32_t timer;
   uint32_t dt;
   uint32_t ddt;
   uint32_t dddt;
   uint8_t dir;
+} MotorSchedule;
+
+typedef struct OutputSchedule {
+  MotorSchedule motors[MOTOR_COUNT];
+  uint8_t completed;
   struct OutputSchedule *next;
 } OutputSchedule;
+
+extern const MotorSchedule noStep;
+extern const OutputSchedule noSteps;
 
 typedef enum {
   ENDSTOP_INIT,
@@ -30,7 +38,7 @@ void enableSystick();
 void disableSystick();
 void SysTick_IRQ_Handler();
 
-void scheduleMotor(uint32_t index, OutputSchedule *);
+void scheduleMotors(OutputSchedule *);
 void scheduleEndstopScan();
 void stopEndstopScan();
 

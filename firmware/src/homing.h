@@ -15,9 +15,9 @@ extern uint32_t homingThresholdSingleAxisScan;
 extern uint32_t homingThresholdInitialScan;
 extern uint32_t homingThresholdRescan;
 
-extern OutputSchedule homingStep;
-extern OutputSchedule homingClearingStep;
-extern OutputSchedule homingFineStep;
+extern MotorSchedule homingStep;
+extern MotorSchedule homingClearingStep;
+extern MotorSchedule homingFineStep;
 
 void runHoming();
 void homingStop();

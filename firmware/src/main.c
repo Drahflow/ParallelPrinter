@@ -3,6 +3,7 @@
 #include "watchdog.h"
 #include "endstop.h"
 #include "homing.h"
+#include "kinematics.h"
 
 int main() {
   // watchdog_init();
@@ -19,6 +20,7 @@ int main() {
 
     runEndstop();
     runHoming();
+    runKinematics();
     runUSB();
     watchdog_reset();
   }
