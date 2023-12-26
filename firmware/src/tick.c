@@ -22,7 +22,7 @@ void disableSystick() {
   SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk;
 }
 
-static OutputSchedule *motorSchedule = NULL;
+static OutputSchedule *volatile motorSchedule = NULL;
 uint32_t motorPulses = 0;
 
 static inline void setMotorDirection(MotorSchedule *schedule, GPIO_TypeDef *dir_gpio, uint32_t dir_pin) {
@@ -67,23 +67,24 @@ uint32_t endstopWaitDuration;
 uint32_t endstopInitDuration = 1000;
 
 void SysTick_IRQ_Handler() {
-  if(motorSchedule) {
+  OutputSchedule *schedule = motorSchedule;
+  if(schedule) {
     bool moreSteps =
-      executeMotorSchedule(motorSchedule->motors + 0, GPIOC, 13, 1 << 0) ||
-      executeMotorSchedule(motorSchedule->motors + 1, GPIOE,  4, 1 << 1) ||
-      executeMotorSchedule(motorSchedule->motors + 2, GPIOE,  1, 1 << 2) ||
-      executeMotorSchedule(motorSchedule->motors + 3, GPIOB,  8, 1 << 3) ||
-      executeMotorSchedule(motorSchedule->motors + 4, GPIOB,  5, 1 << 4) ||
-      executeMotorSchedule(motorSchedule->motors + 5, GPIOG, 15, 1 << 5) ||
-      executeMotorSchedule(motorSchedule->motors + 6, GPIOD,  3, 1 << 6) ||
-      executeMotorSchedule(motorSchedule->motors + 7, GPIOA, 10, 1 << 7) ||
-      executeMotorSchedule(motorSchedule->motors + 8, GPIOA,  8, 1 << 8) ||
-      executeMotorSchedule(motorSchedule->motors + 9, GPIOG,  6, 1 << 9) ||
+      executeMotorSchedule(schedule->motors + 0, GPIOC, 13, 1 << 0) |
+      executeMotorSchedule(schedule->motors + 1, GPIOE,  4, 1 << 1) |
+      executeMotorSchedule(schedule->motors + 2, GPIOE,  1, 1 << 2) |
+      executeMotorSchedule(schedule->motors + 3, GPIOB,  8, 1 << 3) |
+      executeMotorSchedule(schedule->motors + 4, GPIOB,  5, 1 << 4) |
+      executeMotorSchedule(schedule->motors + 5, GPIOG, 15, 1 << 5) |
+      executeMotorSchedule(schedule->motors + 6, GPIOD,  3, 1 << 6) |
+      executeMotorSchedule(schedule->motors + 7, GPIOA, 10, 1 << 7) |
+      executeMotorSchedule(schedule->motors + 8, GPIOA,  8, 1 << 8) |
+      executeMotorSchedule(schedule->motors + 9, GPIOG,  6, 1 << 9) |
       0;
 
     if(!moreSteps) {
-      motorSchedule->completed = 1;
-      motorSchedule = motorSchedule->next;
+      schedule->completed = 1;
+      motorSchedule = schedule->next;
     }
   }
 
@@ -133,10 +134,47 @@ void stopEndstopScan() {
 }
 
 void scheduleMotors(OutputSchedule *schedule) {
+  setMotorDirections(schedule);
   motorSchedule = schedule;
-  setMotorDirections(motorSchedule);
 }
 
 bool motorsMoving() {
   return motorSchedule;
+}
+
+void dumpScheduleStatus() {
+  if(!motorSchedule) {
+    console_send_str("No active schedule.\r\n");
+    return;
+  }
+
+  console_send_str("Output schedule at ");
+  console_send_uint32((uint32_t)motorSchedule);
+  console_send_str("\r\n");
+  for(int i = 0; i < MOTOR_COUNT; ++i) {
+    MotorSchedule *sched = motorSchedule->motors + i;
+
+    console_send_uint8(i);
+    console_send_str(" t: ");
+    console_send_uint32(sched->timer);
+    console_send_str(" dt: ");
+    console_send_uint32(sched->dt);
+    console_send_str(" ddt: ");
+    console_send_uint32(sched->ddt);
+    console_send_str(" dddt: ");
+    console_send_uint32(sched->dddt);
+    console_send_str(" dir: ");
+    console_send_uint8(sched->dir);
+    console_send_str("\r\n");
+  }
+
+  if(motorSchedule->completed) {
+    console_send_str("Completed.\r\n");
+  } else {
+    console_send_str("Not completed.\r\n");
+  }
+
+  console_send_str("Next ");
+  console_send_uint32((uint32_t)motorSchedule->next);
+  console_send_str("\r\n");
 }

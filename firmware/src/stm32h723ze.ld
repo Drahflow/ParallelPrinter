@@ -35,6 +35,16 @@ SECTIONS
         . = ALIGN(4);
         _bss_end = .;
     } > ram
+    /* "heap" definition for sbrk which is somehow (hopefully not) used by libm */
+    .heap : {
+        __heap_start__ = .;
+        end = __heap_start__;
+        _end = end;
+        __end = end;
+        KEEP(*(.heap))
+        __heap_end__ = .;
+        __HeapLimit = __heap_end__;
+    } > ram
     _stack_start = 0x20000000 + 0x20000 - 512 ;
     .stack _stack_start (NOLOAD) :
     {

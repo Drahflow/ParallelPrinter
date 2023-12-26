@@ -8,6 +8,6 @@ void runUSB(void);
 
 void OTG_FS_IRQHandler(void);
 
-void usb_console_send(uint8_t *buf, uint_fast8_t buf_len);
+void usb_console_send(const uint8_t *buf, uint_fast8_t buf_len);
 
 #endif

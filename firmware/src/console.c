@@ -7,6 +7,7 @@
 #include "tick.h"
 #include "endstop.h"
 #include "homing.h"
+#include "kinematics.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -22,17 +23,70 @@ OutputSchedule stop;
 
 OutputSchedule oneStep;
 
-static uint32_t parseU32(uint32_t *v, uint8_t *buf, uint32_t pos, uint32_t endPos) {
+static uint32_t parseU32(uint32_t *v, const uint8_t *buf, uint32_t pos, uint32_t endPos) {
   if(pos == ~0u) return pos;
 
   *v = 0;
-  while(buf[pos] == ' ' && pos < endPos) ++pos;
-  if(!(buf[pos] >= '0' && buf[pos] <= '9')) return ~0u;
+  while(pos < endPos && buf[pos] == ' ') ++pos;
+  if(!(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9')) return ~0u;
 
   while(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9') {
     *v = 10 * *v + (buf[pos] - '0');
     ++pos;
   }
+
+  return pos;
+}
+
+static uint32_t parseI32(int32_t *v, const uint8_t *buf, uint32_t pos, uint32_t endPos) {
+  if(pos == ~0u) return pos;
+
+  bool negative = false;
+  *v = 0;
+  while(pos < endPos && buf[pos] == ' ') ++pos;
+  if(pos < endPos && buf[pos] == '-') {
+    negative = true;
+    ++pos;
+  }
+  if(!(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9')) return ~0u;
+
+  while(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9') {
+    *v = 10 * *v + (buf[pos] - '0');
+    ++pos;
+  }
+
+  if(negative) *v = -*v;
+
+  return pos;
+}
+
+static uint32_t parseDouble(double *v, const uint8_t *buf, uint32_t pos, uint32_t endPos) {
+  if(pos == ~0u) return pos;
+
+  bool negative = false;
+  *v = 0;
+  while(pos < endPos && buf[pos] == ' ') ++pos;
+  if(pos < endPos && buf[pos] == '-') {
+    negative = true;
+    ++pos;
+  }
+  if(!(pos < endPos && ((buf[pos] >= '0' && buf[pos] <= '9') || buf[pos] == '.'))) return ~0u;
+
+  while(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9') {
+    *v = 10 * *v + (buf[pos] - '0');
+    ++pos;
+  }
+  if(pos < endPos && buf[pos] == '.') {
+    ++pos;
+    double digit = .1;
+    while(pos < endPos && buf[pos] >= '0' && buf[pos] <= '9') {
+      *v = *v + (buf[pos] - '0') * digit;
+      digit /= 10;
+      ++pos;
+    }
+  }
+
+  if(negative) *v = -*v;
 
   return pos;
 }
@@ -69,7 +123,7 @@ static void multiStep(Motor *m, uint8_t direction) {
   scheduleMotors(&start);
 }
 
-void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
+void interactiveMotor(const uint8_t *buf, Motor *m, char up, char UP, char down, char DOWN) {
   if(buf[0] == up) { singleStep(m, DIR_MAIN_AXIS_UP); }
   if(buf[0] == UP) { multiStep(m, DIR_MAIN_AXIS_UP); }
 
@@ -79,7 +133,7 @@ void interactiveMotor(uint8_t *buf, Motor *m, char up, char UP, char down, char 
 
 uint32_t parseLinearMotionConfig(
   char *name,
-  uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  const uint8_t *buf, uint32_t pos, uint32_t buf_len,
   MotorSchedule *start, MotorSchedule *run, MotorSchedule *stop
 ) {
   pos = parseU32(&start->count, buf, pos, buf_len);
@@ -131,7 +185,7 @@ uint32_t parseLinearMotionConfig(
 
 uint32_t parseMotorScheduleConfig(
   char *name,
-  uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  const uint8_t *buf, uint32_t pos, uint32_t buf_len,
   MotorSchedule *schedule
 ) {
   pos = parseU32(&schedule->count, buf, pos, buf_len);
@@ -157,7 +211,59 @@ uint32_t parseMotorScheduleConfig(
   return pos;
 }
 
-uint32_t rawMoveAxis(uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t dir) {
+uint32_t parseDisplacement(
+  char *name,
+  const uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  Displacement *disp
+) {
+  pos = parseDouble(&disp->x, buf, pos, buf_len);
+  pos = parseDouble(&disp->y, buf, pos, buf_len);
+  pos = parseDouble(&disp->z, buf, pos, buf_len);
+
+  if(pos == ~0u) {
+    console_send_str("Failed to parse\r\n");
+    return ~0u;
+  }
+
+  console_send_str("New ");
+  console_send_str(name);
+  console_send_str(": ");
+  console_send_double(disp->x); console_send_str(" ");
+  console_send_double(disp->y); console_send_str(" ");
+  console_send_double(disp->z); console_send_str("\r\n");
+
+  return pos;
+}
+
+uint32_t parsePosition(
+  char *name,
+  const uint8_t *buf, uint32_t pos, uint32_t buf_len,
+  Position *position
+) {
+  pos = parseDisplacement(name, buf, pos, buf_len, &position->disp);
+
+  pos = parseDouble(&position->rot.r, buf, pos, buf_len);
+  pos = parseDouble(&position->rot.i, buf, pos, buf_len);
+  pos = parseDouble(&position->rot.j, buf, pos, buf_len);
+  pos = parseDouble(&position->rot.k, buf, pos, buf_len);
+
+  if(pos == ~0u) {
+    console_send_str("Failed to parse\r\n");
+    return ~0u;
+  }
+
+  console_send_str("New ");
+  console_send_str(name);
+  console_send_str(" rotation: ");
+  console_send_double(position->rot.r); console_send_str(" ");
+  console_send_double(position->rot.i); console_send_str(" ");
+  console_send_double(position->rot.j); console_send_str(" ");
+  console_send_double(position->rot.k); console_send_str("\r\n");
+
+  return pos;
+}
+
+uint32_t rawMoveAxis(const uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t dir) {
   uint32_t axis;
   pos = parseU32(&axis, buf, pos, buf_len);
 
@@ -227,7 +333,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   for(cmdEnd = 0; cmdEnd < buf_len && buf[cmdEnd] > ' '; ++cmdEnd);
   buf[cmdEnd] = '\0';
 
-  if(strncmp(cmd, "motor_status", buf_len) == 0) {
+  if(strncmp(cmd, "status:motors", buf_len) == 0) {
     dumpMotorStatus(motors + 0);
     dumpMotorStatus(motors + 1);
     dumpMotorStatus(motors + 2);
@@ -235,6 +341,10 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     dumpMotorStatus(motors + 4);
     dumpMotorStatus(motors + 5);
     dumpMotorStatus(motors + 6);
+  }
+
+  if(strncmp(cmd, "status:schedule", buf_len) == 0) {
+    dumpScheduleStatus();
   }
 
   if(strncmp(cmd, "interactive", buf_len) == 0) {
@@ -271,6 +381,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
 
   if(strncmp(cmd, "stop", buf_len) == 0) {
     homingStop();
+    kinematicsStop();
   }
 
   if(strncmp(cmd, "homing:up", buf_len) == 0) {
@@ -403,6 +514,259 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "config:kinematics:slider:zero", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDisplacement("zero", buf, pos, buf_len, &sliderZero[axis]);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Slider zero configured on axis ");
+    console_send_uint8(axis);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:slider:up", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDisplacement("up", buf, pos, buf_len, &sliderUpStep[axis]);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Slider up vector configured on axis ");
+    console_send_uint8(axis);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:strut", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDouble(&strutLength[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Strut length configured on axis ");
+    console_send_uint8(axis);
+    console_send_str(" to be ");
+    console_send_double(strutLength[axis]);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:limit:upper", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseI32(&upperLimit[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Upper step limit on axis ");
+    console_send_uint8(axis);
+    console_send_str(" now ");
+    console_send_int32(upperLimit[axis]);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:limit:lower", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseI32(&lowerLimit[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Lower step limit on axis ");
+    console_send_uint8(axis);
+    console_send_str(" now ");
+    console_send_int32(lowerLimit[axis]);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:limit:steps_per_second", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    pos = parseDouble(&maximumStepsPerSecond, buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Maximum steps per second now ");
+    console_send_uint32(maximumStepsPerSecond);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:interval", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    pos = parseDouble(&kinematicsSubdivisionInterval, buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Kinematics subdivision interval now ");
+    console_send_uint32(kinematicsSubdivisionInterval);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:attachment", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDisplacement("platform attachment", buf, pos, buf_len, &platformAttachment[axis]);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Platform attachment configured on axis ");
+    console_send_uint8(axis);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "kinematics:zero", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    Position initialTool;
+    pos = parsePosition("tool zero", buf, pos, buf_len, &initialTool);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    setZero(initialTool);
+    console_send_str("Kinematics zeroed and enabled.\r\n");
+  }
+
+  if(strncmp(cmd, "tool:attached", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    Position toolAttachment;
+    pos = parsePosition("tool attachment", buf, pos, buf_len, &toolAttachment);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    setToolAttachedAt(toolAttachment);
+    console_send_str("Tool attachment set.\r\n");
+  }
+
+  if(strncmp(cmd, "tool:move", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    Position target;
+    pos = parsePosition("target", buf, pos, buf_len, &target);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    moveTo(target);
+    console_send_str("Moving.\r\n");
+  }
+
+  if(strncmp(cmd, "tool:speed:movement", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    double speed;
+    pos = parseDouble(&speed, buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    setMovementSpeed(speed);
+    console_send_str("Movement speed now ");
+    console_send_double(speed);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "tool:speed:rotation", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    double speed;
+    pos = parseDouble(&speed, buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    setRotationSpeed(speed);
+    console_send_str("Rotation speed now ");
+    console_send_double(speed);
+    console_send_str("\r\n");
+  }
+
   if(strncmp(cmd, "debug:endstop:on", buf_len) == 0) {
     endstopDebug = true;
     console_send_str("Endstop debug enabled\r\n");
@@ -426,7 +790,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   return buf_len;
 }
 
-void console_send(uint8_t *buf, uint_fast8_t buf_len) {
+void console_send(const uint8_t *buf, uint_fast8_t buf_len) {
   usb_console_send(buf, buf_len);
 }
 
@@ -462,6 +826,15 @@ void console_send_uint32(uint32_t n) {
   console_send(buf, sizeof(buf));
 }
 
+void console_send_int32(int32_t n) {
+  if(n < 0) {
+    console_send_str("-");
+    console_send_uint32(-n);
+  } else {
+    console_send_uint32(n);
+  }
+}
+
 void console_send_uint8(uint32_t n) {
   uint8_t buf[14];
   uint32_t p = 7;
@@ -483,4 +856,49 @@ void console_send_uint8(uint32_t n) {
   buf[13] = ')';
 
   console_send(buf, sizeof(buf));
+}
+
+void console_send_double(double d) {
+  if(d == 0) {
+    console_send_str("0");
+    return;
+  }
+
+  if(d < 0) {
+    console_send_str("-");
+    d = -d;
+  }
+
+  const int maxDigits = 16;
+  double v = 0.999999999999999;
+
+  int i;
+  for(i = 0; v < d && i < maxDigits; ++i, v *= 10);
+  if(i == maxDigits) {
+    console_send_str("inf");
+    return;
+  }
+  v /= 10;
+
+  uint8_t buf[20];
+  uint8_t *t = buf;
+  while(v > .5) {
+    *t++ = '0' + (d / v);
+    d -= (int32_t)(d / v) * v;
+    if(d < 0) d = 0;
+
+    v /= 10;
+  }
+
+  if(d > 0) {
+    *t++ = '.';
+
+    while(d > 0 && t - buf < maxDigits + 1) {
+      *t++ = '0' + (d / v);
+      d -= (int32_t)(d / v) * v;
+      v /= 10;
+    }
+  }
+  
+  console_send(buf, t - buf);
 }

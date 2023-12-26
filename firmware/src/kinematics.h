@@ -45,8 +45,9 @@ extern Position tool; // used only to interpolate continuous tool motion
 void runKinematics();
 void setZero(Position initialToolPosition); // initialToolPosition only used for first motion plan
 void setToolAttachedAt(Position);
-void setMaxMovementSpeed(double mmPerSecond);
-void setMaxRotationSpeed(double degreesPerSecond);
+void setMovementSpeed(double mmPerSecond);
+void setRotationSpeed(double degreesPerSecond);
 void moveTo(Position);
+void kinematicsStop();
 
 #endif

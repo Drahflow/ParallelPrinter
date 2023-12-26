@@ -41,6 +41,7 @@ void SysTick_IRQ_Handler();
 void scheduleMotors(OutputSchedule *);
 void scheduleEndstopScan();
 void stopEndstopScan();
+void dumpScheduleStatus();
 
 extern EndstopState endstopState;
 extern uint32_t endstopInitDuration;

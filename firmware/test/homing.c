@@ -11,6 +11,9 @@ int main(void) {
   homingStep.count = 3;
   homingClearingStep.count = 5;
   homingFineStep.count = 1;
+  homingStep.dt = 2000000000;
+  homingClearingStep.dt = 2000000000;
+  homingFineStep.dt = 2000000000;
 
   homingUpwards();
 

@@ -7,8 +7,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifndef TEST
+#define printf(...)
+#endif
+
 bool kinematicsAvailable = false;
-double maximumStepsPerSecond = 60 * 256 * 60; // 60 RPM
+double maximumStepsPerSecond = 60 * 256 * 200 / 60; // 60 RPM
 double minimumMotionDuration = 0.000001;
 double kinematicsSubdivisionInterval = 0.01; // seconds, i.e 10ms
 double rotationLinearThreshold = 0.9995;
@@ -22,7 +26,7 @@ int32_t upperLimit[MAIN_AXIS_COUNT];
 int32_t lowerLimit[MAIN_AXIS_COUNT];
 bool abovePlatform[MAIN_AXIS_COUNT];
 
-#define SCHEDULE_BUFFER_COUNT 256
+#define SCHEDULE_BUFFER_COUNT 128
 static OutputSchedule scheduleBuffer[SCHEDULE_BUFFER_COUNT];
 static int nextFreeSchedule;
 
@@ -39,6 +43,35 @@ static int nextFreeTarget;
 int32_t stepsUp[MAIN_AXIS_COUNT];
 Position tool;
 
+static void initializeScheduleBuffers() {
+  for(int i = 0; i < SCHEDULE_BUFFER_COUNT; ++i) {
+    for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+      scheduleBuffer[i].motors[axis].dddt = 0;
+      scheduleBuffer[i].motors[axis].ddt = 0;
+      scheduleBuffer[i].motors[axis].dt = 0;
+      scheduleBuffer[i].motors[axis].timer = 0;
+    }
+  }
+  for(int i = 0; i < SCHEDULE_BUFFER_COUNT; ++i) {
+    for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+      scheduleBuffer[i].motors[axis].count = 0;
+    }
+
+    scheduleBuffer[i].next = NULL;
+    scheduleBuffer[i].completed = 1;
+  }
+
+  nextFreeSchedule = 0;
+}
+
+static void initializeTargetBuffers() {
+  for(int i = 0; i < TARGET_BUFFER_COUNT; ++i) {
+    targetBuffer[i].completed = 1;
+  }
+  nextFreeTarget = 0;
+  currentTarget = -1;
+}
+
 void setZero(Position initialToolPosition) {
   for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
     stepsUp[i] = 0;
@@ -49,17 +82,10 @@ void setZero(Position initialToolPosition) {
   platformTool = zero;
   tool = initialToolPosition;
 
-  kinematicsAvailable = true;
-  for(int i = 0; i < SCHEDULE_BUFFER_COUNT; ++i) {
-    scheduleBuffer[i].completed = 1;
-  }
-  nextFreeSchedule = 0;
+  initializeScheduleBuffers();
+  initializeTargetBuffers();
 
-  for(int i = 0; i < TARGET_BUFFER_COUNT; ++i) {
-    targetBuffer[i].completed = 1;
-  }
-  nextFreeTarget = 0;
-  currentTarget = -1;
+  kinematicsAvailable = true;
 }
 
 Quaternion unitQuaternionInverse(Quaternion q) {
@@ -79,7 +105,7 @@ Displacement displacementFromQuaternion(Quaternion q) {
 
 Quaternion quaternionMul(Quaternion a, Quaternion b) {
   Quaternion result = {
-    a.r * b.r - a.i * b.i - a.j * b.j - a.k - b.k,
+    a.r * b.r - a.i * b.i - a.j * b.j - a.k * b.k,
     a.r * b.i + a.i * b.r + a.j * b.k - a.k * b.j,
     a.r * b.j - a.i * b.k + a.j * b.r + a.k * b.i,
     a.r * b.k + a.i * b.j - a.j * b.i + a.k * b.r
@@ -166,18 +192,21 @@ Position relativePositionAdd(Position base, Position rel) {
   return result;
 }
 
+// Return x such that relativePositionAdd(x, rel) == base
 Position relativePositionSub(Position base, Position rel) {
-  // disp: base.disp - base.rot * rel.disp * base.rot^-1
+  Rotation relRotInverse = unitQuaternionInverse(rel.rot);
+  Rotation resultRot = quaternionMul(relRotInverse, base.rot);
+  // disp: base.disp - rel.rot^-1 * base.rot * rel.disp * base.rot^-1 * rel.rot
   // rot: rel.rot^-1 * base.rot
   Position result = {
     displacementSub(
       base.disp,
       displacementFromQuaternion(quaternionMul(
-        base.rot,
+        resultRot,
         quaternionMul(
           quaternionFromDisplacement(rel.disp),
-          unitQuaternionInverse(base.rot))))),
-      quaternionMul(unitQuaternionInverse(rel.rot), base.rot)
+          unitQuaternionInverse(resultRot))))),
+      resultRot
   };
   return result;
 }
@@ -194,7 +223,7 @@ void setMovementSpeed(double mmPerSecond) {
   movementSpeed = mmPerSecond;
 }
 
-static double rotationSpeed = 5;
+static double rotationSpeed = 5.0 / 180 * M_PI;
 void setRotationSpeed(double degreesPerSecond) {
   rotationSpeed = degreesPerSecond / 180 * M_PI;
 }
@@ -203,14 +232,21 @@ void completeCurrentTarget() {
     targetBuffer[currentTarget].completed = 1;
     currentTarget = (currentTarget + 1) % TARGET_BUFFER_COUNT;
 
-    if(currentTarget == nextFreeTarget) currentTarget = -1;
+    if(currentTarget == nextFreeTarget) {
+      currentTarget = -1;
+
+      console_send_str("Movement scheduling completed.\r\n");
+    }
 }
 
 void runKinematics() {
   if(!kinematicsAvailable) return;
   if(currentTarget == -1) return;
-  int lookAhead = (nextFreeTarget + SCHEDULE_BUFFER_COUNT / 4) % SCHEDULE_BUFFER_COUNT;
-  if(!scheduleBuffer[lookAhead].completed) return;
+  int lookAhead = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT / 4) % SCHEDULE_BUFFER_COUNT;
+  if(!scheduleBuffer[lookAhead].completed) {
+    //printf("Waiting for schedule buffer %d\n", lookAhead);
+    return;
+  }
 
   Position *target = &targetBuffer[currentTarget].target;
   printf("Current target: %lf %lf %lf @ %lf %lf %lf %lf\n",
@@ -260,7 +296,7 @@ void runKinematics() {
     if(i == intervals - 1) {
       endPos = *target;
     } else {
-      double b = i * divisions;
+      double b = (i + 1) * divisions;
       double a = (1 - b);
 
       // printf("a,b: %lf %lf\n", a, b);
@@ -275,7 +311,7 @@ void runKinematics() {
               quaternionScale(toolBefore.rot, a),
               quaternionScale(target->rot, b)));
       } else {
-        double theta = theta_0 * a;
+        double theta = theta_0 * b;
 
         endPos.rot = quaternionAdd(
             quaternionScale(toolBefore.rot, cos(theta)),
@@ -313,22 +349,48 @@ void runKinematics() {
       double dotUU = displacementDot(u, u);
       double dotDD = displacementDot(d, d);
 
-      double k1 = (dotDU + sqrt(dotDU * dotDU - dotUU * (dotDD - s*s))) / dotUU;
-      double k2 = (dotDU - sqrt(dotDU * dotDU - dotUU * (dotDD - s*s))) / dotUU;
+      printf("attachmentTarget[%d]: %lf %lf %lf; displacement: %lf %lf %lf\n",
+          axis,
+          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+          d.x, d.y, d.z);
+
+      double sqrtInner = dotDU * dotDU - dotUU * (dotDD - s*s);
+      if(sqrtInner < 0) {
+        console_send_str("Target outside maximum strut reach. Axis ");
+        console_send_uint8(axis);
+        console_send_str("\r\n");
+
+        completeCurrentTarget(); // TODO global error handling
+        return;
+      }
+
+      double k1 = (dotDU + sqrt(sqrtInner)) / dotUU;
+      double k2 = (dotDU - sqrt(sqrtInner)) / dotUU;
 
       double k = abovePlatform[axis]? k1: k2;
+
+      printf("attachmentTarget[%d]: %lf %lf %lf; step: %lf\n",
+          axis,
+          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+          k);
 
       if(k < lowerLimit[axis] || k > upperLimit[axis]) {
         console_send_str("Target requires slider outside limits. Axis ");
         console_send_uint8(axis);
         console_send_str(" target ");
         console_send_uint32(k);
+        console_send_str("\r\n");
 
         completeCurrentTarget(); // TODO global error handling
         return;
       }
 
       stepDelta[axis] = k - stepsUp[axis];
+
+      printf("attachmentTarget[%d]: %lf %lf %lf; step delta: %d\n",
+          axis,
+          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+          stepDelta[axis]);
     }
 
     double intervalDuration = kinematicsSubdivisionInterval;
@@ -338,6 +400,7 @@ void runKinematics() {
       if(dur > intervalDuration) intervalDuration = dur;
     }
 
+    printf("Scheduling into buffer %d\n", nextFreeSchedule);
     OutputSchedule *sched = scheduleBuffer + nextFreeSchedule;
     if(!sched->completed) {
       targetComplete = false;
@@ -345,6 +408,7 @@ void runKinematics() {
     }
 
     sched->next = NULL;
+    sched->completed = 0;
 
     for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
       sched->motors[axis].dir = stepDelta[axis] >= 0? DIR_MAIN_AXIS_UP: DIR_MAIN_AXIS_DOWN;
@@ -363,9 +427,8 @@ void runKinematics() {
       while(motorsMoving());
 
       startSchedule = true;
-    } else {
-      scheduleBuffer[lastSchedule].next = sched;
     }
+    scheduleBuffer[lastSchedule].next = sched;
 
     for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
       stepsUp[axis] += stepDelta[axis];
@@ -374,6 +437,20 @@ void runKinematics() {
 
     nextFreeSchedule = (nextFreeSchedule + 1) % SCHEDULE_BUFFER_COUNT;
   }
+
+  console_send_str("Remaining target duration: ");
+  console_send_double(duration);
+  console_send_str("\r\n");
+
+  console_send_str("Tool position after move: ");
+  console_send_double(tool.disp.x); console_send_str(" ");
+  console_send_double(tool.disp.y); console_send_str(" ");
+  console_send_double(tool.disp.z); console_send_str(" @ ");
+  console_send_double(tool.rot.r); console_send_str(" ");
+  console_send_double(tool.rot.i); console_send_str(" ");
+  console_send_double(tool.rot.j); console_send_str(" ");
+  console_send_double(tool.rot.k); console_send_str("\r\n");
+
   if(startSchedule) scheduleMotors(scheduleBuffer + newSchedules);
   if(targetComplete) completeCurrentTarget();
 }
@@ -389,4 +466,24 @@ void moveTo(Position target) {
   if(currentTarget == -1) currentTarget = nextFreeTarget;
 
   nextFreeTarget = (nextFreeTarget + 1) % TARGET_BUFFER_COUNT;
+}
+
+void kinematicsStop() {
+  currentTarget = -1;
+  for(int i = 0; i < 1000; ++i) {
+    scheduleMotors(NULL);
+  }
+
+  for(int i = 0; i < SCHEDULE_BUFFER_COUNT; ++i) {
+    for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+      if(scheduleBuffer[i].motors[axis].dir == DIR_MAIN_AXIS_UP) {
+        stepsUp[axis] -= scheduleBuffer[i].motors[axis].count;
+      } else if(scheduleBuffer[i].motors[axis].dir == DIR_MAIN_AXIS_DOWN) {
+        stepsUp[axis] += scheduleBuffer[i].motors[axis].count;
+      }
+    }
+  }
+
+  initializeScheduleBuffers();
+  initializeTargetBuffers();
 }

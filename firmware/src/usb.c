@@ -1126,7 +1126,7 @@ void runUSB() {
   }
 }
 
-void usb_console_send(uint8_t *buf, uint_fast8_t buf_len) {
+void usb_console_send(const uint8_t *buf, uint_fast8_t buf_len) {
   // Verify space for message
   uint_fast8_t tpos = transmit_pos;
   if (tpos + buf_len > sizeof(transmit_buf))
