@@ -65,7 +65,12 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
  23.60 EUR: 1x Rillenkugellager 6901 / 61901 ZZ / 2Z 12x24x6 mm 
        ^^^: 14x Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
        ^^^: 1x Rillenkugellager 6807 / 61807 ZZ / 2Z 35x47x7 mm
-  4.10 EUR: 14x M12 flache Muttern
+  4.10 EUR: 14x M12 flache Muttern DIN 439 B, 5.74mm dick
+ 
+ 89.68 EUR: 13x Rillenkugellager 6901 / 61901 ZZ / 2Z 12x24x6 mm 
+       ^^^: 32x Miniatur Kugellager MR 128 ZZ / 2Z 8x12x3.5 mm
+       ^^^: 13x Rillenkugellager 6807 / 61807 ZZ / 2Z 35x47x7 mm
+  4.31 EUR: 14x M12 flache Muttern DIN 439 B, 5.74mm dick
 
 
 == Things likely useful ==
