@@ -264,7 +264,7 @@ uint32_t parsePosition(
 }
 
 uint32_t rawMoveAxis(const uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t dir) {
-  uint32_t axis;
+  uint32_t axis = -1;
   pos = parseU32(&axis, buf, pos, buf_len);
 
   if(axis >= MOTOR_COUNT) {

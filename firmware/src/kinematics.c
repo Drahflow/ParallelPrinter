@@ -72,22 +72,6 @@ static void initializeTargetBuffers() {
   currentTarget = -1;
 }
 
-void setZero(Position initialToolPosition) {
-  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
-    stepsUp[i] = 0;
-    abovePlatform[i] = true;
-  }
-
-  const Position zero = {{0, 0, 0}, {1, 0, 0, 0}};
-  platformTool = zero;
-  tool = initialToolPosition;
-
-  initializeScheduleBuffers();
-  initializeTargetBuffers();
-
-  kinematicsAvailable = true;
-}
-
 Quaternion unitQuaternionInverse(Quaternion q) {
   Quaternion result = {q.r, -q.i, -q.j, -q.k};
   return result;
@@ -239,6 +223,108 @@ void completeCurrentTarget() {
     }
 }
 
+static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUNT]) {
+  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+    Position relativeAttachment = {
+      platformAttachment[axis],
+      {1, 0, 0, 0}
+    };
+    Position attachmentTarget =
+      relativePositionAdd(
+          relativePositionSub(endPos, platformTool),
+          relativeAttachment);
+
+    Displacement d = displacementSub(attachmentTarget.disp, sliderZero[axis]);
+    Displacement u = sliderUpStep[axis];
+    double s = strutLength[axis];
+    // k == stepsUp
+    // |d - k*u| = s
+    // (d - k*u)^2 = s^2
+    // d^2 - 2*d*u*k + u^2k^2 - s^2 = 0
+    // k^2 - 2*d*u*k / u^2 + (d^2 - s^2) / u^2 = 0
+    // k = d*u/u^2 +- sqrt(((d*u)^2 / u^4) - (d^2-s^2)/u^2)
+    // k = (d*u +- sqrt((d*u)^2 - u^2*(d^2-s^2)) / u^2
+
+    double dotDU = displacementDot(d, u);
+    double dotUU = displacementDot(u, u);
+    double dotDD = displacementDot(d, d);
+
+    printf("attachmentTarget[%d]: %lf %lf %lf; displacement: %lf %lf %lf\n",
+        axis,
+        attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+        d.x, d.y, d.z);
+
+    double sqrtInner = dotDU * dotDU - dotUU * (dotDD - s*s);
+    if(sqrtInner < 0) {
+      console_send_str("Target outside maximum strut reach. Axis ");
+      console_send_uint8(axis);
+      console_send_str("\r\n");
+
+      return 0;
+    }
+
+    double k1 = (dotDU + sqrt(sqrtInner)) / dotUU;
+    double k2 = (dotDU - sqrt(sqrtInner)) / dotUU;
+
+    double k = abovePlatform[axis]? k1: k2;
+
+    printf("attachmentTarget[%d]: %lf %lf %lf; step: %lf\n",
+        axis,
+        attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+        k);
+
+    if(k < lowerLimit[axis] || k > upperLimit[axis]) {
+      console_send_str("Target requires slider outside limits. Axis ");
+      console_send_uint8(axis);
+      console_send_str(" target ");
+      console_send_uint32(k);
+      console_send_str("\r\n");
+
+      return 0;
+    }
+
+    stepDelta[axis] = k - stepsUp[axis];
+
+    printf("attachmentTarget[%d]: %lf %lf %lf; step delta: %d\n",
+        axis,
+        attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
+        stepDelta[axis]);
+  }
+
+  return 1;
+}
+
+void setZero(Position initialToolPosition) {
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    stepsUp[i] = 0;
+    abovePlatform[i] = true;
+  }
+
+  const Position zero = {{0, 0, 0}, {1, 0, 0, 0}};
+  platformTool = zero;
+  tool = initialToolPosition;
+
+  initializeScheduleBuffers();
+  initializeTargetBuffers();
+
+  int32_t stepDelta[MAIN_AXIS_COUNT];
+  if(!calculateStepDeltas(initialToolPosition, stepDelta)) {
+    kinematicsAvailable = false;
+    return;
+  }
+
+  console_send_str("Required step deltas to reach initial position:\r\n");
+  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+    console_send_str("Axis ");
+    console_send_uint8(axis);
+    console_send_str(": ");
+    console_send_int32(stepDelta[axis]);
+    console_send_str("\r\n");
+  }
+
+  kinematicsAvailable = true;
+}
+
 void runKinematics() {
   if(!kinematicsAvailable) return;
   if(currentTarget == -1) return;
@@ -324,73 +410,9 @@ void runKinematics() {
         endPos.rot.r, endPos.rot.i, endPos.rot.j, endPos.rot.k);
 
     int32_t stepDelta[MAIN_AXIS_COUNT];
-    for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-      Position relativeAttachment = {
-        platformAttachment[axis],
-        {1, 0, 0, 0}
-      };
-      Position attachmentTarget =
-        relativePositionAdd(
-            relativePositionSub(endPos, platformTool),
-            relativeAttachment);
-
-      Displacement d = displacementSub(attachmentTarget.disp, sliderZero[axis]);
-      Displacement u = sliderUpStep[axis];
-      double s = strutLength[axis];
-      // k == stepsUp
-      // |d - k*u| = s
-      // (d - k*u)^2 = s^2
-      // d^2 - 2*d*u*k + u^2k^2 - s^2 = 0
-      // k^2 - 2*d*u*k / u^2 + (d^2 - s^2) / u^2 = 0
-      // k = d*u/u^2 +- sqrt(((d*u)^2 / u^4) - (d^2-s^2)/u^2)
-      // k = (d*u +- sqrt((d*u)^2 - u^2*(d^2-s^2)) / u^2
-
-      double dotDU = displacementDot(d, u);
-      double dotUU = displacementDot(u, u);
-      double dotDD = displacementDot(d, d);
-
-      printf("attachmentTarget[%d]: %lf %lf %lf; displacement: %lf %lf %lf\n",
-          axis,
-          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
-          d.x, d.y, d.z);
-
-      double sqrtInner = dotDU * dotDU - dotUU * (dotDD - s*s);
-      if(sqrtInner < 0) {
-        console_send_str("Target outside maximum strut reach. Axis ");
-        console_send_uint8(axis);
-        console_send_str("\r\n");
-
-        completeCurrentTarget(); // TODO global error handling
-        return;
-      }
-
-      double k1 = (dotDU + sqrt(sqrtInner)) / dotUU;
-      double k2 = (dotDU - sqrt(sqrtInner)) / dotUU;
-
-      double k = abovePlatform[axis]? k1: k2;
-
-      printf("attachmentTarget[%d]: %lf %lf %lf; step: %lf\n",
-          axis,
-          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
-          k);
-
-      if(k < lowerLimit[axis] || k > upperLimit[axis]) {
-        console_send_str("Target requires slider outside limits. Axis ");
-        console_send_uint8(axis);
-        console_send_str(" target ");
-        console_send_uint32(k);
-        console_send_str("\r\n");
-
-        completeCurrentTarget(); // TODO global error handling
-        return;
-      }
-
-      stepDelta[axis] = k - stepsUp[axis];
-
-      printf("attachmentTarget[%d]: %lf %lf %lf; step delta: %d\n",
-          axis,
-          attachmentTarget.disp.x, attachmentTarget.disp.y, attachmentTarget.disp.z,
-          stepDelta[axis]);
+    if(!calculateStepDeltas(endPos, stepDelta)) {
+      completeCurrentTarget(); // TODO global error handling
+      return;
     }
 
     double intervalDuration = kinematicsSubdivisionInterval;

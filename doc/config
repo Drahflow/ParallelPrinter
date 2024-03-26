@@ -25,13 +25,13 @@ move:axis:up 6 85 0 0 7330 0 40170 0 73300775 0 0 85 0 73300775 4294959966 0
 move:axis:up 0 85 0 0 7330 0 20000 0 73300775 0 0 85 0 73300775 4294959966 0
 move:axis:up 1 85 0 0 7330 0 40170 0 73300775 0 0 85 0 73300775 4294959966 0
 
-config:kinematics:slider:zero 0 -300 0 -42
-config:kinematics:slider:zero 1 -200 0 0
-config:kinematics:slider:zero 2 -100 0 -85
-config:kinematics:slider:zero 3 0 0 -42
-config:kinematics:slider:zero 4 100 0 -85
-config:kinematics:slider:zero 5 200 0 0
-config:kinematics:slider:zero 6 300 0 -42
+config:kinematics:slider:zero 0 -300 0 -41
+config:kinematics:slider:zero 1 -200 -27 -34
+config:kinematics:slider:zero 2 -100 0 -84
+config:kinematics:slider:zero 3 0 -27 -79
+config:kinematics:slider:zero 4 100 0 -84
+config:kinematics:slider:zero 5 200 -27 -34
+config:kinematics:slider:zero 6 300 0 -41
 
 config:kinematics:slider:up 0 0 0 0.0000341796875
 config:kinematics:slider:up 1 0 0 0.0000341796875
@@ -66,17 +66,17 @@ config:kinematics:attachment 5 175 -96 40
 config:kinematics:attachment 6 260 -91 0
 
 config:kinematics:strut 0 550
-config:kinematics:strut 1 550
+config:kinematics:strut 1 516
 config:kinematics:strut 2 550
-config:kinematics:strut 3 550
+config:kinematics:strut 3 516
 config:kinematics:strut 4 550
-config:kinematics:strut 5 550
+config:kinematics:strut 5 516
 config:kinematics:strut 6 550
 
 config:kinematics:interval 0.05
 config:kinematics:limit:steps_per_second 51200
 
-kinematics:zero 0 65 -590 1 0 0 0
+kinematics:zero 0 75 -590 1 0 0 0
 
 # manual experiments
 

@@ -29,25 +29,38 @@ int main(void) {
   for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
     motors[i].pos = 0;
     sliderZero[i].x = (i - 3) * 100.0;
-    sliderZero[i].y = 0.0;
 
     sliderUpStep[i].x = 0.0;
     sliderUpStep[i].y = 0.0;
     sliderUpStep[i].z = 1.75 / 256 / 200;
 
-    strutLength[i] = 550.0;
-
     upperLimit[i] = 200 * 256 * 200 / 1.75;
     lowerLimit[i] = -700 * 256 * 200 / 1.75;
   }
 
-  sliderZero[0].z = -42.0;
-  sliderZero[1].z = 0.0;
-  sliderZero[2].z = -85.0;
-  sliderZero[3].z = -42.0;
-  sliderZero[4].z = -85.0;
-  sliderZero[5].z = 0.0;
-  sliderZero[6].z = -42.0;
+  strutLength[0] = 550.0;
+  strutLength[1] = 516.0;
+  strutLength[2] = 550.0;
+  strutLength[3] = 516.0;
+  strutLength[4] = 550.0;
+  strutLength[5] = 516.0;
+  strutLength[6] = 550.0;
+
+  sliderZero[0].y = -0.0;
+  sliderZero[1].y = -27.0;
+  sliderZero[2].y = -0.0;
+  sliderZero[3].y = -27.0;
+  sliderZero[4].y = -0.0;
+  sliderZero[5].y = -27.0;
+  sliderZero[6].y = -0.0;
+
+  sliderZero[0].z = -41.0;
+  sliderZero[1].z = -34.0;
+  sliderZero[2].z = -84.0;
+  sliderZero[3].z = -79.0;
+  sliderZero[4].z = -84.0;
+  sliderZero[5].z = -34.0;
+  sliderZero[6].z = -41.0;
 
   platformAttachment[0].x = 40.0 - 3 * 100.0;
   platformAttachment[1].x = 25.0 - 2 * 100.0;
@@ -79,7 +92,7 @@ int main(void) {
   motorSchedule = NULL;
 
   Position somewhereBelow = {
-    {0.0, 65.0, -590.0},
+    {0.0, 75.0, -590.0},
     {1.0, 0.0, 0.0, 0.0}
   };
 
@@ -104,7 +117,7 @@ int main(void) {
   setToolAttachedAt(toolAtCenter);
 
   Position targetPosition = {
-    {0.0, 65.1, -592.0},
+    {0.0, 75.1, -592.0},
     {1.0, 0.0, 0.0, 0.0}
   };
   moveTo(targetPosition);
