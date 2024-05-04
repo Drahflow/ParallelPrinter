@@ -1,6 +1,79 @@
 #include "simulation.c"
 
+#include <assert.h>
+
+void testCalculateStrutForces() {
+  Displacement platform = { 0, 0, 0 };
+  Displacement attachmentTarget[] = {
+    { -1, 0, 0.1},
+    { 0, -1, 0.2},
+    { -1, -0.5, 0.3},
+    { 0, 0, 0},
+    { 1, 0.5, 0.3},
+    { 0, 1, 0.2},
+    { 2, 0, 0.1},
+  };
+  Displacement strutForceDirection[] = {
+    { -1, 0, 0.1},
+    { 0, -1, 0.2},
+    { -1, -1, 0.3},
+    { 0, 0, 1},
+    { 1, 1, 0.3},
+    { 0, 1, 0.2},
+    { 1, 0, 0.1},
+  };
+
+  double forces[MAIN_AXIS_COUNT];
+
+  assert(calculateStrutForces(platform, attachmentTarget, strutForceDirection, 0.8, forces));
+
+  assert(fabs(forces[0]) < 0.0001);
+  assert(0.499 < forces[1] && forces[1] < 0.501);
+  assert(fabs(forces[2]) < 0.0001);
+  assert(0.799 < forces[3] && forces[3] < 0.801);
+  assert(fabs(forces[4]) < 0.0001);
+  assert(0.499 < forces[5] && forces[5] < .501);
+  assert(fabs(forces[6]) < 0.0001);
+}
+
+void testCalculateStrutForces2() {
+  Displacement platform = { 0, 0, 0 };
+  Displacement attachmentTarget[] = {
+    { -1, -1, 0},
+    { -2, -1, 0},
+    { 0, -1, 0},
+    { 0, 0, 0},
+    { 0, 1, 0},
+    { 1, 0, 0},
+    { 1, 2, 0},
+  };
+  Displacement strutForceDirection[] = {
+    { 0.8, 0, 1},
+    { 1, 0, 1},
+    { 0, 1, 1},
+    { 0, 0, 1},
+    { 0, 1, 1},
+    { 0.7, 0.7, 1},
+    { 1, 1, 1},
+  };
+
+  double forces[MAIN_AXIS_COUNT];
+
+  assert(calculateStrutForces(platform, attachmentTarget, strutForceDirection, 0.8, forces));
+
+  assert(fabs(forces[0]) < 0.0001);
+  assert(0.499 < forces[1] && forces[1] < 0.501);
+  assert(fabs(forces[2]) < 0.0001);
+  assert(0.799 < forces[3] && forces[3] < 0.801);
+  assert(fabs(forces[4]) < 0.0001);
+  assert(0.499 < forces[5] && forces[5] < .501);
+  assert(fabs(forces[6]) < 0.0001);
+}
+
 int main(void) {
+  testCalculateStrutForces();
+  testCalculateStrutForces2();
+
   Position delta = {
     {12.0, 34.0, 56.0},
     {0.9205048534524404, 0.3907311284892737, 0, 0}
@@ -61,6 +134,22 @@ int main(void) {
   sliderZero[4].z = -84.0;
   sliderZero[5].z = -34.0;
   sliderZero[6].z = -41.0;
+
+  sliderBackslash[0] = 1.0;
+  sliderBackslash[1] = 1.0;
+  sliderBackslash[2] = 1.0;
+  sliderBackslash[3] = 1.0;
+  sliderBackslash[4] = 1.0;
+  sliderBackslash[5] = 1.0;
+  sliderBackslash[6] = 1.0;
+
+  sliderElasticity[0] = 0.5;
+  sliderElasticity[1] = 0.5;
+  sliderElasticity[2] = 0.5;
+  sliderElasticity[3] = 0.5;
+  sliderElasticity[4] = 0.5;
+  sliderElasticity[5] = 0.5;
+  sliderElasticity[6] = 0.5;
 
   platformAttachment[0].x = 40.0 - 3 * 100.0;
   platformAttachment[1].x = 25.0 - 2 * 100.0;

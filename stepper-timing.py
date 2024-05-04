@@ -2,7 +2,7 @@
 
 RPM = 10.0
 Startup = 0.02 # second
-Run = 0.05 # second
+Run = 1.0 # second
 Stop = 0.02 # second
 Microsteps = 256
 

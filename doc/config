@@ -15,23 +15,28 @@ config:homing:scan 50 0 73300775 0 0
 config:homing:clear 30000 0 73300775 0 0
 config:homing:fine 1 0 73300775 0 0
 # 180 RPM
-config:interactive:big_step 3839 0 0 52776 0 23039 0 1319413953 0 0 3840 0 1319413953 4294914520 0
+# config:interactive:big_step 3839 0 0 52776 0 23039 0 1319413953 0 0 3840 0 1319413953 4294914520 0
+config:interactive:big_step 3839 0 0 52776 0 8000 0 1319413953 0 0 3840 0 1319413953 4294914520 0
 tick:on
 
 homing:up
 [ wait for completion ]
 
-move:axis:up 6 85 0 0 7330 0 40170 0 73300775 0 0 85 0 73300775 4294959966 0
-move:axis:up 0 85 0 0 7330 0 20000 0 73300775 0 0 85 0 73300775 4294959966 0
-move:axis:up 1 85 0 0 7330 0 40170 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
+move:axis:up 6 85 0 0 7330 0 8533 0 73300775 0 0 85 0 73300775 4294959966 0
 
-config:kinematics:slider:zero 0 -300 0 -41
+config:kinematics:slider:zero 0 -300 -27 -75
 config:kinematics:slider:zero 1 -200 -27 -34
-config:kinematics:slider:zero 2 -100 0 -84
+config:kinematics:slider:zero 2 -100 -27 -119
 config:kinematics:slider:zero 3 0 -27 -79
-config:kinematics:slider:zero 4 100 0 -84
+config:kinematics:slider:zero 4 100 -27 -119
 config:kinematics:slider:zero 5 200 -27 -34
-config:kinematics:slider:zero 6 300 0 -41
+config:kinematics:slider:zero 6 300 -27 -75
 
 config:kinematics:slider:up 0 0 0 0.0000341796875
 config:kinematics:slider:up 1 0 0 0.0000341796875
@@ -57,6 +62,14 @@ config:kinematics:limit:lower 4 -18000000
 config:kinematics:limit:lower 5 -18000000
 config:kinematics:limit:lower 6 -18000000
 
+# config:kinematics:limit:force 0 30
+# config:kinematics:limit:force 1 30
+# config:kinematics:limit:force 2 30
+# config:kinematics:limit:force 3 30
+# config:kinematics:limit:force 4 30
+# config:kinematics:limit:force 5 30
+# config:kinematics:limit:force 6 30
+
 config:kinematics:attachment 0 -260 -91 0
 config:kinematics:attachment 1 -175 -96 40
 config:kinematics:attachment 2 -95 -86 -45
@@ -65,13 +78,13 @@ config:kinematics:attachment 4 95 -86 -45
 config:kinematics:attachment 5 175 -96 40
 config:kinematics:attachment 6 260 -91 0
 
-config:kinematics:strut 0 550
+config:kinematics:strut 0 516
 config:kinematics:strut 1 516
-config:kinematics:strut 2 550
+config:kinematics:strut 2 516
 config:kinematics:strut 3 516
-config:kinematics:strut 4 550
+config:kinematics:strut 4 516
 config:kinematics:strut 5 516
-config:kinematics:strut 6 550
+config:kinematics:strut 6 516
 
 config:kinematics:interval 0.05
 config:kinematics:limit:steps_per_second 51200
@@ -88,10 +101,42 @@ config:motor 4 256 16
 config:motor 5 256 16
 config:motor 6 256 16
 
-tool:speed:movement 2
-config:kinematics:strut 3 545
+kinematics:again
+
+tool:speed:movement 1
 tool:attached 0 30 -45 1 0 0 0
-tool:move 0 95.1 -635 1 0 0 0
+
+# extend forward, 5cm
+tool:move 0 155.1 -635 1 0 0 0
+
+# extend forward, another 5cm
+tool:move 0 205.1 -635 1 0 0 0
+
+config:kinematics:strut:backslash 0 -0.3
+config:kinematics:strut:backslash 1 0
+config:kinematics:strut:backslash 2 -0.3
+config:kinematics:strut:backslash 3 0
+config:kinematics:strut:backslash 4 -0.3
+config:kinematics:strut:backslash 5 0
+config:kinematics:strut:backslash 6 -0.3
+
+config:kinematics:strut:elasticity 0 -0.002
+config:kinematics:strut:elasticity 1 0
+config:kinematics:strut:elasticity 2 -0.0005
+config:kinematics:strut:elasticity 3 0
+config:kinematics:strut:elasticity 4 -0.0005
+config:kinematics:strut:elasticity 5 0
+config:kinematics:strut:elasticity 6 -0.002
+
+# platform tilt: 45 degrees
+tool:move 0 155.0 -635 0.9238795325112867 -0.3826834323650898 0 0
+tool:move 0 155.0 -635 1 0 0 0
+
+config:kinematics:strut 1 547
+config:kinematics:strut 2 545
+config:kinematics:strut 4 545
+config:kinematics:strut 5 547
+tool:move 0 205.0 -635 1 0 0 0
 
 # platform tilt: 45 degrees
 tool:move 0 95.0 -635 0.9238795325112867 -0.3826834323650898 0 0

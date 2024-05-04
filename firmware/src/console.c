@@ -585,6 +585,56 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "config:kinematics:strut:backslash", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDouble(&sliderBackslash[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Strut backslash configured on axis ");
+    console_send_uint8(axis);
+    console_send_str(" to be ");
+    console_send_double(sliderBackslash[axis]);
+    console_send_str("\r\n");
+  }
+
+  if(strncmp(cmd, "config:kinematics:strut:elasticity", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDouble(&sliderElasticity[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Strut elasticity configured on axis ");
+    console_send_uint8(axis);
+    console_send_str(" to be ");
+    console_send_double(sliderElasticity[axis]);
+    console_send_str("\r\n");
+  }
+
   if(strncmp(cmd, "config:kinematics:limit:upper", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 
@@ -650,6 +700,33 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "config:kinematics:limit:force", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    uint32_t axis;
+    pos = parseU32(&axis, buf, pos, buf_len);
+
+    if(axis >= MAIN_AXIS_COUNT) {
+      console_send_str("Axis index too large.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDouble(&forceLimit[axis], buf, pos, buf_len);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    console_send_str("Force limit on axis ");
+    console_send_uint8(axis);
+    console_send_str(" now ");
+    console_send_double(forceLimit[axis]);
+    console_send_str("\r\n");
+
+    checkForceLimiting();
+  }
+
   if(strncmp(cmd, "config:kinematics:interval", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 
@@ -701,6 +778,11 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
 
     setZero(initialTool);
     console_send_str("Kinematics zeroed and enabled.\r\n");
+  }
+
+  if(strncmp(cmd, "kinematics:again", buf_len) == 0) {
+    moveAgain();
+    console_send_str("Moving to current position again.\r\n");
   }
 
   if(strncmp(cmd, "tool:attached", buf_len) == 0) {

@@ -37,6 +37,9 @@ extern double rotationLinearThreshold;
 extern int32_t upperLimit[MAIN_AXIS_COUNT];
 extern int32_t lowerLimit[MAIN_AXIS_COUNT];
 extern bool abovePlatform[MAIN_AXIS_COUNT];
+extern double sliderBackslash[MAIN_AXIS_COUNT];
+extern double sliderElasticity[MAIN_AXIS_COUNT];
+extern double forceLimit[MAIN_AXIS_COUNT];
 
 // Positions at end of current kinematics motor schedule
 extern int32_t stepsUp[MAIN_AXIS_COUNT];
@@ -48,6 +51,8 @@ void setToolAttachedAt(Position);
 void setMovementSpeed(double mmPerSecond);
 void setRotationSpeed(double degreesPerSecond);
 void moveTo(Position);
+void moveAgain();
 void kinematicsStop();
+void checkForceLimiting();
 
 #endif
