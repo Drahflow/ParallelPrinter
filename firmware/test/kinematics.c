@@ -71,8 +71,8 @@ void testCalculateStrutForces2() {
 }
 
 int main(void) {
-  testCalculateStrutForces();
-  testCalculateStrutForces2();
+  // testCalculateStrutForces();
+  // testCalculateStrutForces2();
 
   Position delta = {
     {12.0, 34.0, 56.0},
@@ -111,29 +111,29 @@ int main(void) {
     lowerLimit[i] = -700 * 256 * 200 / 1.75;
   }
 
-  strutLength[0] = 550.0;
+  strutLength[0] = 516.0;
   strutLength[1] = 516.0;
-  strutLength[2] = 550.0;
+  strutLength[2] = 516.0;
   strutLength[3] = 516.0;
-  strutLength[4] = 550.0;
+  strutLength[4] = 516.0;
   strutLength[5] = 516.0;
-  strutLength[6] = 550.0;
+  strutLength[6] = 516.0;
 
-  sliderZero[0].y = -0.0;
+  sliderZero[0].y = -27.0;
   sliderZero[1].y = -27.0;
-  sliderZero[2].y = -0.0;
+  sliderZero[2].y = -27.0;
   sliderZero[3].y = -27.0;
-  sliderZero[4].y = -0.0;
+  sliderZero[4].y = -27.0;
   sliderZero[5].y = -27.0;
-  sliderZero[6].y = -0.0;
+  sliderZero[6].y = -27.0;
 
-  sliderZero[0].z = -41.0;
+  sliderZero[0].z = -75.0;
   sliderZero[1].z = -34.0;
-  sliderZero[2].z = -84.0;
+  sliderZero[2].z = -119.0;
   sliderZero[3].z = -79.0;
-  sliderZero[4].z = -84.0;
+  sliderZero[4].z = -119.0;
   sliderZero[5].z = -34.0;
-  sliderZero[6].z = -41.0;
+  sliderZero[6].z = -75.0;
 
   sliderBackslash[0] = 1.0;
   sliderBackslash[1] = 1.0;
@@ -176,7 +176,9 @@ int main(void) {
   platformAttachment[6].z = 0.0;
 
   kinematicsSubdivisionInterval = 0.05;
-  maximumStepsPerSecond = 51200;
+  maximumStepsPerSecond = 200000;
+  rotationSpeed = 0.3;
+  movementSpeed = 1;
 
   motorSchedule = NULL;
 
@@ -187,31 +189,35 @@ int main(void) {
 
   setZero(somewhereBelow);
 
-  // Position toolAtCenter = {
-  //   {0.0, 20.0, -45.0},
-  //   {1.0, 0.0, 0.0, 0.0}
-  // };
-  // setToolAttachedAt(toolAtCenter);
+  moveAgain();
 
-  // Position targetPosition = {
-  //   {0.0, 20.0, -595.0},
-  //   {1.0, 0.0, 0.0, 0.0}
-  // };
-  // moveTo(targetPosition);
+  uint64_t step = 0;
+  while(
+      motorsMoving()
+  ) {
+    if(++step % 20000 == 0) {
+      for(int i = 0; i < MOTOR_COUNT; ++i) printf("%d ", motors[i].pos);
+      printf(" Tool: %lf %lf %lf @ %lf %lf %lf %lf\n",
+          tool.disp.x, tool.disp.y, tool.disp.z, tool.rot.r, tool.rot.i, tool.rot.j, tool.rot.k);
+    }
+
+    runKinematics();
+    simulate();
+  }
 
   Position toolAtCenter = {
-    {0.0, 0.0, 0.0},
+    {0.0, 30.0, -45.0},
     {1.0, 0.0, 0.0, 0.0}
   };
   setToolAttachedAt(toolAtCenter);
 
   Position targetPosition = {
-    {0.0, 75.1, -592.0},
-    {1.0, 0.0, 0.0, 0.0}
+    {0.0, 105.0, -635.0},
+    {0.9238795325112867, -0.3826834323650898, 0, 0},
   };
   moveTo(targetPosition);
 
-  uint64_t step = 0;
+  step = 0;
   while(
       tool.disp.x != targetPosition.disp.x ||
       tool.disp.y != targetPosition.disp.y ||
@@ -220,6 +226,33 @@ int main(void) {
       tool.rot.i != targetPosition.rot.i ||
       tool.rot.j != targetPosition.rot.j ||
       tool.rot.k != targetPosition.rot.k ||
+      motorsMoving()
+  ) {
+    if(++step % 20000 == 0) {
+      for(int i = 0; i < MOTOR_COUNT; ++i) printf("%d ", motors[i].pos);
+      printf(" Tool: %lf %lf %lf @ %lf %lf %lf %lf\n",
+          tool.disp.x, tool.disp.y, tool.disp.z, tool.rot.r, tool.rot.i, tool.rot.j, tool.rot.k);
+    }
+
+    runKinematics();
+    simulate();
+  }
+
+  Position targetPosition2 = {
+    {0.0, 105.0, -635.0},
+    {1, 0, 0, 0},
+  };
+  moveTo(targetPosition2);
+
+  step = 0;
+  while(
+      tool.disp.x != targetPosition2.disp.x ||
+      tool.disp.y != targetPosition2.disp.y ||
+      tool.disp.z != targetPosition2.disp.z ||
+      tool.rot.r != targetPosition2.rot.r ||
+      tool.rot.i != targetPosition2.rot.i ||
+      tool.rot.j != targetPosition2.rot.j ||
+      tool.rot.k != targetPosition2.rot.k ||
       motorsMoving()
   ) {
     if(++step % 20000 == 0) {

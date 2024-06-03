@@ -738,7 +738,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     }
 
     console_send_str("Kinematics subdivision interval now ");
-    console_send_uint32(kinematicsSubdivisionInterval);
+    console_send_double(kinematicsSubdivisionInterval);
     console_send_str("\r\n");
   }
 
