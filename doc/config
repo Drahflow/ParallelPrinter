@@ -22,13 +22,13 @@ tick:on
 homing:up
 [ wait for completion ]
 
-config:kinematics:slider:zero 0 -300 -27 -75.7
+config:kinematics:slider:zero 0 -300 -27 -165.6
 config:kinematics:slider:zero 1 -200 -27 -75.7
 config:kinematics:slider:zero 2 -100 -27 -119.5
 config:kinematics:slider:zero 3 0 -27 -150.3
 config:kinematics:slider:zero 4 100 -27 -119.5
 config:kinematics:slider:zero 5 200 -27 -75.7
-config:kinematics:slider:zero 6 300 -27 -75.7
+config:kinematics:slider:zero 6 300 -27 -165.6
 
 config:kinematics:slider:up 0 0 0 0.0000341796875
 config:kinematics:slider:up 1 0 0 0.0000341796875
@@ -62,21 +62,21 @@ config:kinematics:limit:lower 6 -18000000
 # config:kinematics:limit:force 5 30
 # config:kinematics:limit:force 6 30
 
-config:kinematics:attachment 0 -260 -90.61 0
+config:kinematics:attachment 0 -260 -35 -40
 config:kinematics:attachment 1 -175 -35 40
 config:kinematics:attachment 2 -95 -85.61 -45
 config:kinematics:attachment 3 0 -33.0 -35
 config:kinematics:attachment 4 95 -85.61 -45
 config:kinematics:attachment 5 175 -35 40
-config:kinematics:attachment 6 260 -90.61 0
+config:kinematics:attachment 6 260 -35 -40
 
-config:kinematics:strut 0 516
+config:kinematics:strut 0 482.52
 config:kinematics:strut 1 482.52
 config:kinematics:strut 2 516
 config:kinematics:strut 3 482.52
 config:kinematics:strut 4 516
 config:kinematics:strut 5 482.52
-config:kinematics:strut 6 516
+config:kinematics:strut 6 482.52
 
 config:kinematics:interval 0.05
 # config:kinematics:limit:steps_per_second 51200
