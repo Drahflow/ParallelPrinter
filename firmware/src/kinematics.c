@@ -245,73 +245,31 @@ void completeCurrentTarget() {
     }
 }
 
-int calculateStrutForces(
-    Displacement platform,
-    Displacement *attachmentTarget,
-    Displacement *strutForceDirection,
-    double expectedCenterProportion,
-    double *forces // positive number: platform pulls on the strut
-) {
-  Displacement centerMoment[MAIN_AXIS_COUNT];
+bool debugSolver = true;
 
-  Displacement down = {0, 0, -1};
-  double centerForceAlignment =
-    displacementDot(strutForceDirection[3], down);
-  if(fabs(centerForceAlignment) < 0.05) {
-    // Center point force near perdendicular, let's clamp and hope
-    centerForceAlignment = centerForceAlignment < 0? -0.05: 0.05;
-  }
-  double expectedCenterForce = -expectedCenterProportion / centerForceAlignment;
-
-  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-    centerMoment[axis] = displacementCross(
-      displacementSub(attachmentTarget[axis], platform),
-      strutForceDirection[axis]);
-  }
-
-#define MATRIX_SIZE 6
-
-  // Now we make a system of linear equations to estimate the force per strut.
-  double x[MATRIX_SIZE];
-  double A[MATRIX_SIZE * MATRIX_SIZE]; // row-major indexing
-  int rowOrder[MATRIX_SIZE];
-  for(int axis = 0; axis < MATRIX_SIZE; ++axis) {
-    rowOrder[axis] = axis;
-  }
-
-  // TODO: Consider changing this for accelleration optimization
-  x[0] = 0; // no x component of result force
-  x[1] = 0; // no y component of result force
-  x[2] = 1; // one unit of force upward (1 == magnitude of gravitational force of platform)
-  x[3] = 0; // no moment-x at platform center
-  x[4] = 0; // no moment-y at platform center
-  x[5] = 0; // no moment-z at platform center
-
-  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-    if(axis == 3) {
-      x[0] -= strutForceDirection[axis].x * expectedCenterForce;
-      x[1] -= strutForceDirection[axis].y * expectedCenterForce;
-      x[2] -= strutForceDirection[axis].z * expectedCenterForce;
-      // no center moments for center strut
-
-      continue;
+void dumpLinearEquations(double *A, double *x, int matrixRows, int matrixCols) {
+  for(int i = 0; i < matrixRows; ++i) {
+    for(int j = 0; j < matrixCols; ++j) {
+      printf("%6.2f ", A[i * matrixCols + j]);
     }
+    printf("= %6.2f\n", x[i]);
+  }
+}
 
-    const int i = axis < 3? axis: axis - 1;
-    A[0 * MATRIX_SIZE + i] = strutForceDirection[axis].x;
-    A[1 * MATRIX_SIZE + i] = strutForceDirection[axis].y;
-    A[2 * MATRIX_SIZE + i] = strutForceDirection[axis].z;
-    A[3 * MATRIX_SIZE + i] = centerMoment[axis].x;
-    A[4 * MATRIX_SIZE + i] = centerMoment[axis].y;
-    A[5 * MATRIX_SIZE + i] = centerMoment[axis].z;
+int solveLinearEquationsByLU(double *A, double *x, double *result, int matrixRows, int matrixCols) {
+  if(debugSolver) dumpLinearEquations(A, x, matrixRows, matrixCols);
+
+  int rowOrder[matrixRows];
+  for(int r = 0; r < matrixRows; ++r) {
+    rowOrder[r] = r;
   }
 
   // cf. https://en.wikipedia.org/wiki/LU_decomposition#Code_examples
-  for(int i = 0; i < MATRIX_SIZE; ++i) {
+  for(int i = 0; i < matrixCols; ++i) {
     int largestK = -1;
     double largestCoeff = 1e-15;
-    for(int k = i; k < MATRIX_SIZE; ++k) {
-      const double abs = fabs(A[k * MATRIX_SIZE + i]);
+    for(int k = i; k < matrixRows; ++k) {
+      const double abs = fabs(A[matrixCols * k + i]);
       if(abs > largestCoeff) {
         largestK = k;
         largestCoeff = abs;
@@ -319,9 +277,8 @@ int calculateStrutForces(
     }
 
     if(largestK < 0) {
-      console_send_str("Platform forces could not be calculated, entry too small in row: ");
-      console_send_uint8(i);
-      console_send_str("\r\n");
+      printf("Solution could not be calculated, entry too small in column: %d\n", i);
+      if(debugSolver) dumpLinearEquations(A, x, matrixRows, matrixCols);
       return 0;
     }
 
@@ -330,59 +287,218 @@ int calculateStrutForces(
       rowOrder[i] = rowOrder[largestK];
       rowOrder[largestK] = tmp;
 
-      double tmp2[MATRIX_SIZE];
-      memmove(tmp2, A + i * MATRIX_SIZE, sizeof(double) * MATRIX_SIZE);
-      memmove(A + i * MATRIX_SIZE, A + largestK * MATRIX_SIZE, sizeof(double) * MATRIX_SIZE);
-      memmove(A + largestK * MATRIX_SIZE, tmp2, sizeof(double) * MATRIX_SIZE);
+      double tmp2[matrixCols];
+      memmove(tmp2, A + i * matrixCols, sizeof(double) * matrixCols);
+      memmove(A + i * matrixCols, A + largestK * matrixCols, sizeof(double) * matrixCols);
+      memmove(A + largestK * matrixCols, tmp2, sizeof(double) * matrixCols);
     }
 
-    for(int j = i + 1; j < MATRIX_SIZE; ++j) {
-      A[j * MATRIX_SIZE + i] /= A[i * MATRIX_SIZE + i];
+    for(int j = i + 1; j < matrixRows; ++j) {
+      A[j * matrixCols + i] /= A[i * matrixCols + i];
 
-      for(int k = i + 1; k < MATRIX_SIZE; ++k) {
-        A[j * MATRIX_SIZE + k] -= A[j * MATRIX_SIZE + i] * A[i * MATRIX_SIZE + k];
+      for(int k = i + 1; k < matrixCols; ++k) {
+        A[j * matrixCols + k] -= A[j * matrixCols + i] * A[i * matrixCols + k];
       }
     }
   }
 
-  for(int i = 0; i < MATRIX_SIZE; ++i) {
-    forces[i] = x[rowOrder[i]];
+  if(debugSolver) {
+    printf("After LU decomposition ==============\n");
+    dumpLinearEquations(A, x, matrixRows, matrixCols);
+  }
+
+  for(int i = 0; i < matrixCols; ++i) {
+    result[i] = x[rowOrder[i]];
 
     for(int j = 0; j < i; ++j) {
-      forces[i] -= A[i * MATRIX_SIZE + j] * forces[j];
+      result[i] -= A[i * matrixCols + j] * result[j];
     }
   }
 
-  for(int i = MATRIX_SIZE - 1; i >= 0; --i) {
-    for(int j = i + 1; j < MATRIX_SIZE; j++) {
-      forces[i] -= A[i * MATRIX_SIZE + j] * forces[j];
+  if(debugSolver) {
+    printf("Result A =============\n");
+    for(int i = 0; i < matrixCols; ++i) {
+      printf("%6.2f ", result[i]);
     }
-
-    forces[i] /= A[i * MATRIX_SIZE + i];
+    printf("\n");
   }
 
-  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-    double force;
-    if(axis == 3) {
-      force = expectedCenterForce;
-    } else {
-      force = forces[axis < 3? axis: axis - 1];
+  for(int i = matrixCols - 1; i >= 0; --i) {
+    for(int j = i + 1; j < matrixCols; j++) {
+      result[i] -= A[i * matrixCols + j] * result[j];
     }
 
-    printf("Force on axis %d: %lf\n", axis, force);
+    if(debugSolver) {
+      if(isnan(A[i * matrixCols + i]) || fabs(A[i * matrixCols + i]) < 0.00001) {
+        printf("Broken division at i = %d, %6.2f\n", i, A[i * matrixCols + i]);
+        dumpLinearEquations(A, x, matrixRows, matrixCols);
+      }
+    }
 
-    if(fabs(force) > forceLimit[axis]) {
-      console_send_str("Force on axis ");
-      console_send_uint8(axis);
-      console_send_str("exceeds expected limits.");
-      return 0;
+    result[i] /= A[i * matrixCols + i];
+  }
+
+  if(debugSolver) {
+    printf("Result ==============\n");
+    for(int i = 0; i < matrixCols; ++i) {
+      printf("%6.2f ", result[i]);
+    }
+    printf("\n");
+  }
+
+  return 1;
+}
+
+int calculateStrutForces(
+    Displacement platform,
+    Displacement *attachmentTarget,
+    Displacement *sliderPositions,
+    double *strutLength,
+    double *forces // positive number: strut is compressed
+) {
+  struct Strut {
+    Displacement start, end;
+    Displacement dir;
+    double length;
+    double elasticity;
+    int startVertexIndex, endVertexIndex;
+  };
+  const int strutCount = MAIN_AXIS_COUNT * 4 - 3;
+  const int vertexCount = MAIN_AXIS_COUNT + 1;
+
+  struct Strut struts[strutCount];
+  int s = 0;
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    struts[s].start = attachmentTarget[i];
+    struts[s].startVertexIndex = i;
+    struts[s].end = sliderPositions[i];
+    struts[s].endVertexIndex = -1;
+    struts[s].dir = displacementSub(struts[s].end, struts[s].start);
+    struts[s].length = strutLength[i];
+    struts[s].elasticity = 0.1;
+    ++s;
+  }
+  for(int i = 0; i < MAIN_AXIS_COUNT - 1; ++i) {
+    struts[s].start = attachmentTarget[i];
+    struts[s].startVertexIndex = i;
+    struts[s].end = attachmentTarget[i + 1];
+    struts[s].endVertexIndex = i + 1;
+    struts[s].dir = displacementSub(struts[s].end, struts[s].start);
+    // TODO: Static after attachment target config
+    struts[s].length = sqrt(displacementDot(struts[s].dir, struts[s].dir));
+    struts[s].elasticity = 0.001;
+    ++s;
+  }
+  for(int i = 0; i < MAIN_AXIS_COUNT - 2; ++i) {
+    struts[s].start = attachmentTarget[i];
+    struts[s].startVertexIndex = i;
+    struts[s].end = attachmentTarget[i + 2];
+    struts[s].endVertexIndex = i + 2;
+    struts[s].dir = displacementSub(struts[s].end, struts[s].start);
+    // TODO: Static after attachment target config
+    struts[s].length = sqrt(displacementDot(struts[s].dir, struts[s].dir));
+    struts[s].elasticity = 0.001;
+    ++s;
+  }
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    struts[s].start = attachmentTarget[i];
+    struts[s].startVertexIndex = i;
+    struts[s].end = platform;
+    struts[s].endVertexIndex = MAIN_AXIS_COUNT;
+    struts[s].dir = displacementSub(struts[s].end, struts[s].start);
+    // TODO: Static after attachment target config
+    struts[s].length = sqrt(displacementDot(struts[s].dir, struts[s].dir));
+    struts[s].elasticity = 0.001;
+    ++s;
+  }
+
+  for(int i = 0; i < strutCount; ++i) {
+    struts[s].dir = displacementScale(struts[s].dir, 1 / struts[s].length);
+  }
+
+  int matrixCols =
+    strutCount + // one force per strut
+    vertexCount * 3; // dx/dy/dz per vertex
+  int matrixRows =
+    strutCount + // force in terms of displacements
+    vertexCount * 3 + // vertex forces in equilibrium along all three axes
+    3; // anchor robot in global space
+
+  double x[matrixRows];
+  double A[matrixRows * matrixCols]; // row-major
+  
+  for(int r = 0; r < matrixRows; ++r) {
+    x[r] = 0;
+
+    for(int c = 0; c < matrixCols; ++c) {
+      A[matrixCols * r + c] = 0;
     }
   }
 
-  forces[6] = forces[5];
-  forces[5] = forces[4];
-  forces[4] = forces[3];
-  forces[3] = expectedCenterForce;
+  // rows 0 to vertexCount * 3 => forces on vertices
+  for(int i = 0; i < strutCount; ++i) {
+    Displacement dir = struts[i].dir;
+
+    const int forceVarIndex = i;
+    // Strut forces at each vertex are in equilibrium along each axis
+    A[matrixCols * (struts[i].startVertexIndex * 3 + 0) + forceVarIndex] = -dir.x;
+    A[matrixCols * (struts[i].startVertexIndex * 3 + 1) + forceVarIndex] = -dir.y;
+    A[matrixCols * (struts[i].startVertexIndex * 3 + 2) + forceVarIndex] = -dir.z;
+
+    if(struts[i].endVertexIndex >= 0) {
+      A[matrixCols * (struts[i].endVertexIndex * 3 + 0) + forceVarIndex] = dir.x;
+      A[matrixCols * (struts[i].endVertexIndex * 3 + 1) + forceVarIndex] = dir.y;
+      A[matrixCols * (struts[i].endVertexIndex * 3 + 2) + forceVarIndex] = dir.z;
+    }
+  }
+
+  // Gravity load on platform center vertex, in z direction
+  x[(MAIN_AXIS_COUNT * 3 + 0)] = 0;
+  x[(MAIN_AXIS_COUNT * 3 + 1)] = 0;
+  x[(MAIN_AXIS_COUNT * 3 + 2)] = 15; // 15N
+
+  // rows vertexCount * 3 to vertexCount * 3 + strutCount => forces in struts
+  for(int i = 0; i < strutCount; ++i) {
+    Displacement dir = struts[i].dir;
+
+    const int forceVarIndex = i;
+    const int startDxdydzVarIndex = strutCount + struts[i].startVertexIndex * 3;
+    const int endDxdydzVarIndex = strutCount + struts[i].endVertexIndex * 3;
+
+    // Non-equal strut endpoint displacement implies internal force
+    A[matrixCols * (vertexCount * 3 + i) + startDxdydzVarIndex + 0] = dir.x;
+    A[matrixCols * (vertexCount * 3 + i) + startDxdydzVarIndex + 1] = dir.y;
+    A[matrixCols * (vertexCount * 3 + i) + startDxdydzVarIndex + 2] = dir.z;
+    if(struts[i].endVertexIndex >= 0) {
+      A[matrixCols * (vertexCount * 3 + i) + endDxdydzVarIndex + 0] = -dir.x;
+      A[matrixCols * (vertexCount * 3 + i) + endDxdydzVarIndex + 1] = -dir.y;
+      A[matrixCols * (vertexCount * 3 + i) + endDxdydzVarIndex + 2] = -dir.z;
+    }
+    A[matrixCols * (vertexCount * 3 + i) + forceVarIndex] = struts[i].elasticity;
+  }
+
+  {
+    const int anchorRows = vertexCount * 3 + strutCount;
+    const int vertexIndex = 0;
+    const int dxdydzVarIndex = strutCount + vertexIndex * 3;
+
+    A[matrixCols * (anchorRows + 0) + dxdydzVarIndex + 0] = 1;
+    A[matrixCols * (anchorRows + 1) + dxdydzVarIndex + 1] = 1;
+    A[matrixCols * (anchorRows + 2) + dxdydzVarIndex + 2] = 1;
+    x[(anchorRows + 0)] = 0;
+    x[(anchorRows + 1)] = 0;
+    x[(anchorRows + 2)] = 0;
+  }
+
+  double result[matrixCols];
+  int success = solveLinearEquationsByLU(A, x, result, matrixRows, matrixCols);
+  if(!success) return 0;
+
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    const int forceVarIndex = i;
+
+    forces[i] = result[forceVarIndex];
+  }
 
   return 1;
 }
@@ -391,7 +507,7 @@ int calculateSliderPositions(
     Position platform,
     Displacement attachmentTarget[MAIN_AXIS_COUNT],
     double effectiveStrutLength[MAIN_AXIS_COUNT],
-    Displacement strutForceDirection[MAIN_AXIS_COUNT],
+    Displacement sliderPositions[MAIN_AXIS_COUNT],
     double sliderLinearPos[MAIN_AXIS_COUNT]) {
   for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
     Position relativeAttachment = {
@@ -450,11 +566,7 @@ int calculateSliderPositions(
       return 0;
     }
 
-    strutForceDirection[axis] = displacementScale(
-        displacementSub(
-          displacementAdd(sliderZero[axis], displacementScale(sliderUpStep[axis], k)),
-          attachmentTarget[axis]),
-        1 / effectiveStrutLength[axis]);
+    sliderPositions[axis] = displacementAdd(sliderZero[axis], displacementScale(sliderUpStep[axis], k));
   }
 
   return 1;
@@ -462,7 +574,7 @@ int calculateSliderPositions(
 
 static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUNT]) {
   Displacement attachmentTarget[MAIN_AXIS_COUNT];
-  Displacement strutForceDirection[MAIN_AXIS_COUNT];
+  Displacement sliderPositions[MAIN_AXIS_COUNT];
   double sliderLinearPos[MAIN_AXIS_COUNT];
 
   Position platform = relativePositionSub(endPos, platformTool);
@@ -470,25 +582,24 @@ static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUN
   double effectiveStrutLength[MAIN_AXIS_COUNT];
   memcpy(effectiveStrutLength, strutLength, sizeof(strutLength));
 
-  if(!calculateSliderPositions(platform, attachmentTarget, effectiveStrutLength, strutForceDirection, sliderLinearPos)) {
+  if(!calculateSliderPositions(platform, attachmentTarget, effectiveStrutLength, sliderPositions, sliderLinearPos)) {
     return 0;
   }
 
   if(forceLimiting) {
-    const double expectedCenterProportion = 0.8;
     double forces[MAIN_AXIS_COUNT];
-    if(!calculateStrutForces(platform.disp, attachmentTarget, strutForceDirection, expectedCenterProportion, forces)) {
+    if(!calculateStrutForces(platform.disp, attachmentTarget, sliderPositions, strutLength, forces)) {
       return 0;
     }
 
     for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-      effectiveStrutLength[axis] += forces[axis] > 0? sliderBackslash[axis]: -sliderBackslash[axis];
-      effectiveStrutLength[axis] += forces[axis] * sliderElasticity[axis];
+      effectiveStrutLength[axis] -= forces[axis] > 0? sliderBackslash[axis]: -sliderBackslash[axis];
+      effectiveStrutLength[axis] -= forces[axis] * sliderElasticity[axis];
 
       printf("strut len delta[%d]: %lf\n", axis, effectiveStrutLength[axis] - strutLength[axis]);
     }
 
-    if(!calculateSliderPositions(platform, attachmentTarget, effectiveStrutLength, strutForceDirection, sliderLinearPos)) {
+    if(!calculateSliderPositions(platform, attachmentTarget, effectiveStrutLength, sliderPositions, sliderLinearPos)) {
       return 0;
     }
   }

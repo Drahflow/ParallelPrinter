@@ -5,74 +5,86 @@
 void testCalculateStrutForces() {
   Displacement platform = { 0, 0, 0 };
   Displacement attachmentTarget[] = {
-    { -1, 0, 0.1},
-    { 0, -1, 0.2},
-    { -1, -0.5, 0.3},
-    { 0, 0, 0},
-    { 1, 0.5, 0.3},
-    { 0, 1, 0.2},
-    { 2, 0, 0.1},
+    { 0, 0, 2},
+    { -2, -1, 1},
+    { 2, -1, 1},
+    { -2, 1, 1},
+    { 2, 1, 1},
+    { 1, -2, 1},
+    { 1, 2, 1},
   };
-  Displacement strutForceDirection[] = {
-    { -1, 0, 0.1},
-    { 0, -1, 0.2},
-    { -1, -1, 0.3},
-    { 0, 0, 1},
-    { 1, 1, 0.3},
-    { 0, 1, 0.2},
-    { 1, 0, 0.1},
+  Displacement sliderPositions[] = {
+    { 0, 0, 3},
+    { -3, -1, 1},
+    { 3, -1, 1},
+    { -3, 1, 1},
+    { 3, 1, 1},
+    { 1, -3, 1},
+    { 1, 3, 1},
   };
+
+  double strutLength[MAIN_AXIS_COUNT];
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    Displacement dir = displacementSub(sliderPositions[i], attachmentTarget[i]);
+    strutLength[i] = sqrt(displacementDot(dir, dir));
+  }
 
   double forces[MAIN_AXIS_COUNT];
 
-  assert(calculateStrutForces(platform, attachmentTarget, strutForceDirection, 0.8, forces));
+  assert(calculateStrutForces(platform, attachmentTarget, sliderPositions, strutLength, forces));
 
-  assert(fabs(forces[0]) < 0.0001);
-  assert(0.499 < forces[1] && forces[1] < 0.501);
-  assert(fabs(forces[2]) < 0.0001);
-  assert(0.799 < forces[3] && forces[3] < 0.801);
-  assert(fabs(forces[4]) < 0.0001);
-  assert(0.499 < forces[5] && forces[5] < .501);
-  assert(fabs(forces[6]) < 0.0001);
+  assert(-15.001 < forces[0] && forces[0] < -14.999);
+  assert(-0.001 < forces[1] && forces[1] < 0.001);
+  assert(-0.001 < forces[2] && forces[2] < 0.001);
+  assert(-0.001 < forces[3] && forces[3] < 0.001);
+  assert(-0.001 < forces[4] && forces[4] < 0.001);
+  assert(-0.001 < forces[5] && forces[5] < 0.001);
+  assert(-0.001 < forces[6] && forces[6] < 0.001);
 }
 
 void testCalculateStrutForces2() {
   Displacement platform = { 0, 0, 0 };
   Displacement attachmentTarget[] = {
-    { -1, -1, 0},
-    { -2, -1, 0},
-    { 0, -1, 0},
-    { 0, 0, 0},
-    { 0, 1, 0},
-    { 1, 0, 0},
-    { 1, 2, 0},
+    { 0, 0.1, 2},
+    { 0, -0.1, 2},
+    { 2, -1, 1},
+    { -2, 1, 1},
+    { 2, 1, 1},
+    { 1, -2, 1},
+    { 1, 2, 1},
   };
-  Displacement strutForceDirection[] = {
-    { 0.8, 0, 1},
-    { 1, 0, 1},
-    { 0, 1, 1},
-    { 0, 0, 1},
-    { 0, 1, 1},
-    { 0.7, 0.7, 1},
-    { 1, 1, 1},
+  Displacement sliderPositions[] = {
+    { 0, 0.1, 3},
+    { 0, -0.1, 3},
+    { 3, -1, 1},
+    { -3, 1, 1},
+    { 3, 1, 1},
+    { 1, -3, 1},
+    { 1, 3, 1},
   };
+
+  double strutLength[MAIN_AXIS_COUNT];
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    Displacement dir = displacementSub(sliderPositions[i], attachmentTarget[i]);
+    strutLength[i] = sqrt(displacementDot(dir, dir));
+  }
 
   double forces[MAIN_AXIS_COUNT];
 
-  assert(calculateStrutForces(platform, attachmentTarget, strutForceDirection, 0.8, forces));
+  assert(calculateStrutForces(platform, attachmentTarget, sliderPositions, strutLength, forces));
 
-  assert(fabs(forces[0]) < 0.0001);
-  assert(0.499 < forces[1] && forces[1] < 0.501);
-  assert(fabs(forces[2]) < 0.0001);
-  assert(0.799 < forces[3] && forces[3] < 0.801);
-  assert(fabs(forces[4]) < 0.0001);
-  assert(0.499 < forces[5] && forces[5] < .501);
-  assert(fabs(forces[6]) < 0.0001);
+  assert(-7.52 < forces[0] && forces[0] < -7.48);
+  assert(-7.52 < forces[1] && forces[1] < -7.48);
+  assert(-0.001 < forces[2] && forces[2] < 0.001);
+  assert(-0.001 < forces[3] && forces[3] < 0.001);
+  assert(-0.001 < forces[4] && forces[4] < 0.001);
+  assert(-0.001 < forces[5] && forces[5] < 0.001);
+  assert(-0.001 < forces[6] && forces[6] < 0.001);
 }
 
 int main(void) {
-  // testCalculateStrutForces();
-  // testCalculateStrutForces2();
+  testCalculateStrutForces();
+  testCalculateStrutForces2();
 
   Position delta = {
     {12.0, 34.0, 56.0},

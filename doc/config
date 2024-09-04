@@ -103,6 +103,10 @@ tool:attached 0 30 -45 1 0 0 0
 # extend forward, 5cm
 tool:move 0 155.1 -635 1 0 0 0
 
+# adjust for joint elasticity on middle rod
+config:kinematics:strut 3 478.52
+kinematics:again
+
 # extend forward, another 5cm
 tool:move 0 205.1 -635 1 0 0 0
 
@@ -112,9 +116,9 @@ tool:move 0 305.1 -635 1 0 0 0
 # extend forward, another 5cm
 tool:move 0 355.1 -635 1 0 0 0
 
-# adjust for joint elasticity on middle rod
-config:kinematics:strut 3 478.52
-kinematics:again
+# move left 5cm
+tool:move -50 355.1 -635 1 0 0 0
+
 
 tool:move 0 355.1 -635 1 0 0 0
 tool:move 0 405.1 -635 1 0 0 0
