@@ -38,3 +38,6 @@ flash: build/firmware.bin
 test/%: test/%.c src/*.c src/*.h
 	gcc -Wall -Wextra -ggdb -o $@ $< -lm
 	valgrind $@
+
+clean:
+	rm -rfv $(OBJECTS)

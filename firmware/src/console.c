@@ -765,6 +765,37 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "config:kinematics:center_of_mass", buf_len) == 0) {
+    uint32_t pos = cmdEnd + 1;
+
+    Displacement disp;
+    double force;
+    pos = parseDisplacement("platform center of mass", buf, pos, buf_len, &disp);
+
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    pos = parseDouble(&force, buf, pos, buf_len);
+    if(pos == ~0u) {
+      console_send_str("Parse problem.\r\n");
+      return buf_len;
+    }
+
+    setCenterOfMassAt(disp, force);
+
+    console_send_str("Platform center of mass at ");
+    console_send_double(disp.x);
+    console_send_str(" ");
+    console_send_double(disp.y);
+    console_send_str(" ");
+    console_send_double(disp.z);
+    console_send_str(" pulled down by ");
+    console_send_double(force);
+    console_send_str("\r\n");
+  }
+
   if(strncmp(cmd, "kinematics:zero", buf_len) == 0) {
     uint32_t pos = cmdEnd + 1;
 

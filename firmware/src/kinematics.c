@@ -19,6 +19,8 @@ double rotationLinearThreshold = 0.9995;
 
 Displacement platformAttachment[MAIN_AXIS_COUNT];
 Position platformTool;
+Displacement platformCenterOfMass;
+double platformGravitationalForce = 0.0;
 Displacement sliderZero[MAIN_AXIS_COUNT];
 Displacement sliderUpStep[MAIN_AXIS_COUNT];
 double strutLength[MAIN_AXIS_COUNT];
@@ -224,6 +226,11 @@ void setToolAttachedAt(Position pos) {
   platformTool = pos;
 }
 
+void setCenterOfMassAt(Displacement disp, double force) {
+  platformCenterOfMass = disp;
+  platformGravitationalForce = force;
+}
+
 static double movementSpeed = 1;
 void setMovementSpeed(double mmPerSecond) {
   movementSpeed = mmPerSecond;
@@ -350,7 +357,7 @@ int solveLinearEquationsByLU(double *A, double *x, double *result, int matrixRow
 }
 
 int calculateStrutForces(
-    Displacement platform,
+    Displacement centerOfMass,
     Displacement *attachmentTarget,
     Displacement *sliderPositions,
     double *strutLength,
@@ -403,7 +410,7 @@ int calculateStrutForces(
   for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
     struts[s].start = attachmentTarget[i];
     struts[s].startVertexIndex = i;
-    struts[s].end = platform;
+    struts[s].end = centerOfMass;
     struts[s].endVertexIndex = MAIN_AXIS_COUNT;
     struts[s].dir = displacementSub(struts[s].end, struts[s].start);
     // TODO: Static after attachment target config
@@ -452,10 +459,10 @@ int calculateStrutForces(
     }
   }
 
-  // Gravity load on platform center vertex, in z direction
+  // Gravity load on center of mass vertex, in z direction
   x[(MAIN_AXIS_COUNT * 3 + 0)] = 0;
   x[(MAIN_AXIS_COUNT * 3 + 1)] = 0;
-  x[(MAIN_AXIS_COUNT * 3 + 2)] = 15; // 15N
+  x[(MAIN_AXIS_COUNT * 3 + 2)] = platformGravitationalForce; // 15N
 
   // rows vertexCount * 3 to vertexCount * 3 + strutCount => forces in struts
   for(int i = 0; i < strutCount; ++i) {
@@ -578,6 +585,11 @@ static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUN
   double sliderLinearPos[MAIN_AXIS_COUNT];
 
   Position platform = relativePositionSub(endPos, platformTool);
+  Position centerOfMassPosition = {
+    platformCenterOfMass,
+    { 1, 0, 0, 0 },
+  };
+  Position centerOfMass = relativePositionAdd(platform, centerOfMassPosition);
 
   double effectiveStrutLength[MAIN_AXIS_COUNT];
   memcpy(effectiveStrutLength, strutLength, sizeof(strutLength));
@@ -588,7 +600,7 @@ static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUN
 
   if(forceLimiting) {
     double forces[MAIN_AXIS_COUNT];
-    if(!calculateStrutForces(platform.disp, attachmentTarget, sliderPositions, strutLength, forces)) {
+    if(!calculateStrutForces(centerOfMass.disp, attachmentTarget, sliderPositions, strutLength, forces)) {
       return 0;
     }
 
@@ -624,6 +636,7 @@ void setZero(Position initialToolPosition) {
 
   const Position zero = {{0, 0, 0}, {1, 0, 0, 0}};
   platformTool = zero;
+  platformCenterOfMass = zero.disp;
   tool = initialToolPosition;
 
   initializeScheduleBuffers();

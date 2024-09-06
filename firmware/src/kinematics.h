@@ -27,6 +27,7 @@ typedef struct {
 
 extern Displacement platformAttachment[MAIN_AXIS_COUNT]; // relative to platform center
 extern Position platformTool; // relative to platform center
+extern Displacement platformCenterOfMass;
 extern Displacement sliderZero[MAIN_AXIS_COUNT];
 extern Displacement sliderUpStep[MAIN_AXIS_COUNT]; // vector of movement for 1 up microstep
 extern double strutLength[MAIN_AXIS_COUNT];
@@ -48,6 +49,7 @@ extern Position tool; // used only to interpolate continuous tool motion
 void runKinematics();
 void setZero(Position initialToolPosition); // initialToolPosition only used for first motion plan
 void setToolAttachedAt(Position);
+void setCenterOfMassAt(Displacement, double force);
 void setMovementSpeed(double mmPerSecond);
 void setRotationSpeed(double degreesPerSecond);
 void moveTo(Position);

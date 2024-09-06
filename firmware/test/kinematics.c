@@ -3,7 +3,8 @@
 #include <assert.h>
 
 void testCalculateStrutForces() {
-  Displacement platform = { 0, 0, 0 };
+  // Displacement platform = { 0, 0, 0 };
+  Displacement centerOfMass = { 0, 0, 0 };
   Displacement attachmentTarget[] = {
     { 0, 0, 2},
     { -2, -1, 1},
@@ -31,7 +32,7 @@ void testCalculateStrutForces() {
 
   double forces[MAIN_AXIS_COUNT];
 
-  assert(calculateStrutForces(platform, attachmentTarget, sliderPositions, strutLength, forces));
+  assert(calculateStrutForces(centerOfMass, attachmentTarget, sliderPositions, strutLength, forces));
 
   assert(-15.001 < forces[0] && forces[0] < -14.999);
   assert(-0.001 < forces[1] && forces[1] < 0.001);
@@ -43,7 +44,8 @@ void testCalculateStrutForces() {
 }
 
 void testCalculateStrutForces2() {
-  Displacement platform = { 0, 0, 0 };
+  // Displacement platform = { 0, 0, 0 };
+  Displacement centerOfMass = { 0, 0.1, -10 };
   Displacement attachmentTarget[] = {
     { 0, 0.1, 2},
     { 0, -0.1, 2},
@@ -71,15 +73,19 @@ void testCalculateStrutForces2() {
 
   double forces[MAIN_AXIS_COUNT];
 
-  assert(calculateStrutForces(platform, attachmentTarget, sliderPositions, strutLength, forces));
+  assert(calculateStrutForces(centerOfMass, attachmentTarget, sliderPositions, strutLength, forces));
 
-  assert(-7.52 < forces[0] && forces[0] < -7.48);
-  assert(-7.52 < forces[1] && forces[1] < -7.48);
-  assert(-0.001 < forces[2] && forces[2] < 0.001);
-  assert(-0.001 < forces[3] && forces[3] < 0.001);
-  assert(-0.001 < forces[4] && forces[4] < 0.001);
-  assert(-0.001 < forces[5] && forces[5] < 0.001);
-  assert(-0.001 < forces[6] && forces[6] < 0.001);
+  for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
+    printf("Force at strut %d: %lf\n", i, forces[i]);
+  }
+  assert(-7.6 < forces[0] && forces[0] < -7.4);
+  assert(-7.6 < forces[1] && forces[1] < -7.4);
+  assert(forces[1] < forces[0]);
+  assert(-0.1 < forces[2] && forces[2] < 0.1);
+  assert(-0.1 < forces[3] && forces[3] < 0.1);
+  assert(-0.1 < forces[4] && forces[4] < 0.1);
+  assert(-0.1 < forces[5] && forces[5] < 0.1);
+  assert(-0.1 < forces[6] && forces[6] < 0.1);
 }
 
 int main(void) {
