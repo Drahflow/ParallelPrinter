@@ -54,13 +54,13 @@ config:kinematics:limit:lower 4 -18000000
 config:kinematics:limit:lower 5 -18000000
 config:kinematics:limit:lower 6 -18000000
 
-# config:kinematics:limit:force 0 30
-# config:kinematics:limit:force 1 30
-# config:kinematics:limit:force 2 30
-# config:kinematics:limit:force 3 30
-# config:kinematics:limit:force 4 30
-# config:kinematics:limit:force 5 30
-# config:kinematics:limit:force 6 30
+config:kinematics:limit:force 0 30
+config:kinematics:limit:force 1 30
+config:kinematics:limit:force 2 30
+config:kinematics:limit:force 3 30
+config:kinematics:limit:force 4 30
+config:kinematics:limit:force 5 30
+config:kinematics:limit:force 6 30
 
 config:kinematics:attachment 0 -200 -35 -40
 config:kinematics:attachment 1 -175 -35 40
@@ -69,6 +69,24 @@ config:kinematics:attachment 3 0 -33.0 -35
 config:kinematics:attachment 4 95 -85.61 -45
 config:kinematics:attachment 5 175 -35 40
 config:kinematics:attachment 6 200 -35 -40
+
+config:kinematics:strut:backslash 0 0.9
+config:kinematics:strut:backslash 1 0.9
+config:kinematics:strut:backslash 2 0.9
+config:kinematics:strut:backslash 3 0.9
+config:kinematics:strut:backslash 4 0.9
+config:kinematics:strut:backslash 5 0.9
+config:kinematics:strut:backslash 6 0.9
+
+config:kinematics:strut:elasticity 0 0.5
+config:kinematics:strut:elasticity 1 0.5
+config:kinematics:strut:elasticity 2 0.5
+config:kinematics:strut:elasticity 3 0.5
+config:kinematics:strut:elasticity 4 0.5
+config:kinematics:strut:elasticity 5 0.5
+config:kinematics:strut:elasticity 6 0.5
+
+config:kinematics:center_of_mass 0 5 -10 10
 
 config:kinematics:strut 0 482.52
 config:kinematics:strut 1 482.52
@@ -100,101 +118,75 @@ tool:speed:movement 1
 tool:speed:rotation 0.3
 tool:attached 0 30 -45 1 0 0 0
 
-# extend forward, 5cm
-tool:move 0 155.1 -635 1 0 0 0
-
-# adjust for joint elasticity on middle rod
-config:kinematics:strut 3 478.52
-kinematics:again
-
-# extend forward, another 5cm
-tool:move 0 205.1 -635 1 0 0 0
-
-# extend forward, another 5cm
-tool:move 0 305.1 -635 1 0 0 0
-
-# extend forward, another 5cm
-tool:move 0 355.1 -635 1 0 0 0
-
-# move left 5cm
-tool:move -50 355.1 -635 1 0 0 0
-
-
-tool:move 0 355.1 -635 1 0 0 0
-tool:move 0 405.1 -635 1 0 0 0
-tool:move 0 405.1 -735 1 0 0 0
-tool:move 0 405.1 -745 1 0 0 0
-tool:move 0 405.1 -753 1 0 0 0
-tool:move 0 405.1 -755 1 0 0 0
-tool:move 0 405.1 -754.7 1 0 0 0
-tool:move 0 425.1 -754.7 1 0 0 0
-tool:move 0 425.1 -754.75 1 0 0 0
-tool:move -20 425.1 -754.75 1 0 0 0
-tool:move -20 425.1 -754 1 0 0 0
-tool:move -20 425.1 -753.5 1 0 0 0
-tool:move -40 425.1 -752.5 1 0 0 0
-tool:move -60 425.1 -751.5 1 0 0 0
-tool:move -80 425.1 -750.5 1 0 0 0
-tool:move -80 418.1 -750.5 1 0 0 0
-tool:move -80 418.1 -749.5 1 0 0 0
-tool:move -80 400.1 -749.5 1 0 0 0
-tool:move -80 400.1 -749 1 0 0 0
-tool:move 0 400.1 -749 1 0 0 0
-tool:move 0 405.1 -754.7 1 0 0 0
-
-tool:move 0 105.1 -635 1 0 0 0
-
-# platform tilt: 45 degrees
-tool:move 0 105.0 -635 0.9238795325112867 -0.3826834323650898 0 0
-# and back, THIS DOES NOT WORK?!?
+# platform tilt 10 degrees
+tool:move 0 105.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+# and back
 tool:move 0 105.0 -635 1 0 0 0
 
-config:kinematics:strut:backslash 0 -0.3
-config:kinematics:strut:backslash 1 0
-config:kinematics:strut:backslash 2 -0.3
-config:kinematics:strut:backslash 3 0
-config:kinematics:strut:backslash 4 -0.3
-config:kinematics:strut:backslash 5 0
-config:kinematics:strut:backslash 6 -0.3
+# extend forward, 1cm
+tool:move 0 115.0 -635 1 0 0 0
 
-config:kinematics:strut:elasticity 0 -0.002
-config:kinematics:strut:elasticity 1 0
-config:kinematics:strut:elasticity 2 -0.0005
-config:kinematics:strut:elasticity 3 0
-config:kinematics:strut:elasticity 4 -0.0005
-config:kinematics:strut:elasticity 5 0
-config:kinematics:strut:elasticity 6 -0.002
+# extend forward, 5cm
+tool:move 0 125.0 -635 1 0 0 0
+tool:move 0 135.0 -635 1 0 0 0
+tool:move 0 145.0 -635 1 0 0 0
+tool:move 0 155.0 -635 1 0 0 0
+tool:move 0 155.0 -635 0.9961946980917455 -0.08715574274765817 0 0
 
-config:kinematics:strut 1 547
-config:kinematics:strut 2 545
-config:kinematics:strut 4 545
-config:kinematics:strut 5 547
-tool:move 0 205.0 -635 1 0 0 0
+# extend forward, another 5cm
+tool:move 0 165.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 175.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 185.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 195.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 205.0 -635 0.9961946980917455 -0.08715574274765817 0 0
 
-# platform tilt: 45 degrees
-tool:move 0 95.0 -635 0.9238795325112867 -0.3826834323650898 0 0
-tool:move 0 95.0 -635 1 0 0 0
+# extend forward, another 5cm
+tool:move 0 215.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 225.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 235.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 245.0 -635 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 255.0 -635 0.9961946980917455 -0.08715574274765817 0 0
 
-tool:attached 0 30 -45 0.9961946980917455 0.08715574274765817 0 0
-tool:move 0 95.0 -635 1 0 0 0
+config:kinematics:slider:zero 0 -300 -27 -166.8
+config:kinematics:slider:zero 1 -200 -27 -76.5
+config:kinematics:slider:zero 5 200 -27 -74.9
+config:kinematics:slider:zero 6 300 -27 -164.8
 
-tool:attached 0 30 -45 0.9238795325112867 0.3826834323650898 0 0
-tool:move 0 95.0 -635 1 0 0 0
+# move up 3cm, to evade the motors
+tool:move 0 255.0 -605 0.9961946980917455 -0.08715574274765817 0 0
 
-# manually pull forward
-tool:move 0 500.0 -635 1 0 0 0
-tool:move 50 500.0 -635 1 0 0 0
-tool:move 150 500.0 -635 1 0 0 0
+# extend forward, another 5cm
+tool:move 0 265.0 -605 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 275.0 -605 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 285.0 -605 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 295.0 -605 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 305.0 -605 0.9961946980917455 -0.08715574274765817 0 0
 
-# platform rotate: 10 degrees, left side forward
-tool:attached -260 30 -45 0.9238795325112867 0.3826834323650898 0 0
-tool:move -260 95.0 -635 1 0 0 0
-tool:move -260 185.0 -635 0.9961946980917455 0 -0.08715574274765817 0
+kinematics:again
 
+### The above is all sane ###
 
-# 60 degrees
-tool:move 0 95.0 -635 0.8660254037844387 -0.49999999999999994 0 0
-# 20 degrees
-tool:move 0 95.0 -635 0.984807753012208 -0.17364817766693033 0 0
-# 90 degrees
-tool:move 0 95.0 -635 0.7071067811865475 -0.7071067811865475 0 0
+tool:move 0 305.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 315.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -10 315.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -10 305.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -10 305.0 -723.8 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -10 310.0 -723.8 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -10 305.0 -724.0 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 305.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+
+tool:move 0 305.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+
+tool:move 0 315.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -1 315.0 -723.8 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -1 310.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -1 310.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -2 315.0 -723.8 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -2 310.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -2 310.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -3 315.0 -723.8 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -3 310.0 -723.5 0.9961946980917455 -0.08715574274765817 0 0
+tool:move -3 310.0 -724 0.9961946980917455 -0.08715574274765817 0 0
+
+tool:move 0 315.0 -720 0.9961946980917455 -0.08715574274765817 0 0
+tool:move 0 315.0 -700 0.9961946980917455 -0.08715574274765817 0 0

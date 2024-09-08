@@ -579,6 +579,7 @@ int calculateSliderPositions(
   return 1;
 }
 
+static bool printAdjustedLengths = false;
 static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUNT]) {
   Displacement attachmentTarget[MAIN_AXIS_COUNT];
   Displacement sliderPositions[MAIN_AXIS_COUNT];
@@ -609,6 +610,15 @@ static int calculateStepDeltas(Position endPos, int32_t stepDelta[MAIN_AXIS_COUN
       effectiveStrutLength[axis] -= forces[axis] * sliderElasticity[axis];
 
       printf("strut len delta[%d]: %lf\n", axis, effectiveStrutLength[axis] - strutLength[axis]);
+    }
+
+    if(printAdjustedLengths) {
+      console_send_str("Adjusted strut lengths (mm): ");
+      for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+        console_send_double(effectiveStrutLength[axis] - strutLength[axis]);
+        console_send_str(" ");
+      }
+      console_send_str("\r\n");
     }
 
     if(!calculateSliderPositions(platform, attachmentTarget, effectiveStrutLength, sliderPositions, sliderLinearPos)) {
@@ -852,10 +862,12 @@ void moveAgain() {
   }
 
   int32_t stepDelta[MAIN_AXIS_COUNT];
+  printAdjustedLengths = true;
   if(!calculateStepDeltas(tool, stepDelta)) {
     console_send_str("step delta calculation failed\r\n");
     return;
   }
+  printAdjustedLengths = false;
 
   double intervalDuration = 1.0;
   for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
