@@ -59,6 +59,9 @@ Schrägkugellager 30/8 2RS TN 8x22x11 mm
   2.90 EUR: 2x 100x 9mm (4.3x9x0.8) Unterlegscheiben
   2.55 EUR: 1x 100x M4 Muttern
   2.00 EUR: 1x 5V Laser Diode 650nm, 10mm long, 6mm diameter, 5mm diameter groove
+  5.00 EUR: 1x 100x M4 12mm Stahlschrauben
+  2.55 EUR: 1x 100x M4 Muttern
+  2.90 EUR: 2x 100x 9mm (4.3x9x0.8) Unterlegscheiben
 
 == Improved Sliders ==
 

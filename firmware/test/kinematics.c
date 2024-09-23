@@ -31,6 +31,7 @@ void testCalculateStrutForces() {
   }
 
   double forces[MAIN_AXIS_COUNT];
+  platformGravitationalForce = 15;
 
   assert(calculateStrutForces(centerOfMass, attachmentTarget, sliderPositions, strutLength, forces));
 
@@ -88,33 +89,7 @@ void testCalculateStrutForces2() {
   assert(-0.1 < forces[6] && forces[6] < 0.1);
 }
 
-int main(void) {
-  testCalculateStrutForces();
-  testCalculateStrutForces2();
-
-  Position delta = {
-    {12.0, 34.0, 56.0},
-    {0.9205048534524404, 0.3907311284892737, 0, 0}
-  };
-  Position base = {
-    {11.0, 22.0, 33.0},
-    {0.7431448254773942, 0, 0, -0.6691306063588582}
-  };
-  Rotation unit1 = quaternionMul(unitQuaternionInverse(base.rot), base.rot);
-  Rotation unit2 = quaternionMul(base.rot, unitQuaternionInverse(base.rot));
-  printf("unit1: @ %lf %lf %lf %lf\n", unit1.r, unit1.i, unit1.j, unit1.k);
-  printf("unit2: @ %lf %lf %lf %lf\n", unit2.r, unit2.i, unit2.j, unit2.k);
-
-  Position addSub = relativePositionAdd(relativePositionSub(base, delta), delta);
-  Position subAdd = relativePositionSub(relativePositionAdd(base, delta), delta);
-
-  printf("addSub: %lf %lf %lf @ %lf %lf %lf %lf\n",
-      addSub.disp.x, addSub.disp.y, addSub.disp.z,
-      addSub.rot.r, addSub.rot.i, addSub.rot.j, addSub.rot.k);
-  printf("subAdd: %lf %lf %lf @ %lf %lf %lf %lf\n",
-      subAdd.disp.x, subAdd.disp.y, subAdd.disp.z,
-      subAdd.rot.r, subAdd.rot.i, subAdd.rot.j, subAdd.rot.k);
-
+static void setupTestConfig() {
   initMotorDrivers();
 
   for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
@@ -206,6 +181,33 @@ int main(void) {
   };
 
   setZero(somewhereBelow);
+}
+
+static void runKinematicsABit() {
+  Position delta = {
+    {12.0, 34.0, 56.0},
+    {0.9205048534524404, 0.3907311284892737, 0, 0}
+  };
+  Position base = {
+    {11.0, 22.0, 33.0},
+    {0.7431448254773942, 0, 0, -0.6691306063588582}
+  };
+  Rotation unit1 = quaternionMul(unitQuaternionInverse(base.rot), base.rot);
+  Rotation unit2 = quaternionMul(base.rot, unitQuaternionInverse(base.rot));
+  printf("unit1: @ %lf %lf %lf %lf\n", unit1.r, unit1.i, unit1.j, unit1.k);
+  printf("unit2: @ %lf %lf %lf %lf\n", unit2.r, unit2.i, unit2.j, unit2.k);
+
+  Position addSub = relativePositionAdd(relativePositionSub(base, delta), delta);
+  Position subAdd = relativePositionSub(relativePositionAdd(base, delta), delta);
+
+  printf("addSub: %lf %lf %lf @ %lf %lf %lf %lf\n",
+      addSub.disp.x, addSub.disp.y, addSub.disp.z,
+      addSub.rot.r, addSub.rot.i, addSub.rot.j, addSub.rot.k);
+  printf("subAdd: %lf %lf %lf @ %lf %lf %lf %lf\n",
+      subAdd.disp.x, subAdd.disp.y, subAdd.disp.z,
+      subAdd.rot.r, subAdd.rot.i, subAdd.rot.j, subAdd.rot.k);
+
+  setupTestConfig();
 
   moveAgain();
 
@@ -282,4 +284,61 @@ int main(void) {
     runKinematics();
     simulate();
   }
+}
+
+static void queueToolMoveCommands() {
+  setupTestConfig();
+
+  Position toolAtCenter = {
+    {0.0, 30.0, -45.0},
+    {1.0, 0.0, 0.0, 0.0}
+  };
+  setToolAttachedAt(toolAtCenter);
+
+  Position targetPositionA = {
+    {0.0, 155.0, -635.0},
+    {1, 0, 0, 0},
+  };
+  // moveTo(targetPositionA);
+
+  // Position targetPositionB = {
+  //   {0.0, 155.0, -605.0},
+  //   {1, 0, 0, 0},
+  // };
+  // moveTo(targetPositionB);
+
+  Position targetPositionC = {
+    {30.0, 155.0, -550.0},
+    {1, 0, 0, 0},
+  };
+  moveTo(targetPositionC);
+
+  int step = 0;
+  while(
+      tool.disp.x != targetPositionA.disp.x ||
+      tool.disp.y != targetPositionA.disp.y ||
+      tool.disp.z != targetPositionA.disp.z ||
+      tool.rot.r != targetPositionA.rot.r ||
+      tool.rot.i != targetPositionA.rot.i ||
+      tool.rot.j != targetPositionA.rot.j ||
+      tool.rot.k != targetPositionA.rot.k ||
+      motorsMoving()
+  ) {
+    if(++step % 20000 == 0) {
+      for(int i = 0; i < MOTOR_COUNT; ++i) printf("%d ", motors[i].pos);
+      printf(" Tool: %lf %lf %lf @ %lf %lf %lf %lf\n",
+          tool.disp.x, tool.disp.y, tool.disp.z, tool.rot.r, tool.rot.i, tool.rot.j, tool.rot.k);
+    }
+
+    runKinematics();
+    simulate();
+  }
+}
+
+int main(void) {
+  testCalculateStrutForces();
+  testCalculateStrutForces2();
+
+  queueToolMoveCommands();
+  // runKinematicsABit();
 }
