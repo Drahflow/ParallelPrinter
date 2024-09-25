@@ -18,8 +18,8 @@
 #define EVENT_STREAM_STDIN 0
 
 #define FRAMEBUFFER_DEVICE "/dev/graphics/fb0"
-#define FRAMEBUFFER_WIDTH 2560
-#define FRAMEBUFFER_HEIGHT 1600
+#define FRAMEBUFFER_WIDTH 1280
+#define FRAMEBUFFER_HEIGHT 800
 #define BACKLIGHT_DEVICE "/sys/class/backlight/pwm-backlight/brightness"
 
 typedef struct __attribute__((packed)) rgba {
@@ -31,7 +31,7 @@ rgba *framebuffer;
 uint8_t initFramebuffer() {
   int fb = open(FRAMEBUFFER_DEVICE, O_RDWR);
   if(fb < 0) {
-    fprintf(stderr, "Opening /dev/fb0 failed: %s", strerror(errno));
+    fprintf(stderr, "Opening "FRAMEBUFFER_DEVICE" failed: %s", strerror(errno));
     return 0;
   }
 
@@ -108,7 +108,7 @@ void handleInput(char *buffer) {
 
 int main(int, const char **) {
   if(!initFramebuffer()) return 1;
-  if(!setBacklight(128 << 8)) return 1;
+  if(!setBacklight(255 << 8)) return 1;
 
   int epollFd = epoll_create(8);
   if(epollFd < 0) {
@@ -161,5 +161,6 @@ int main(int, const char **) {
     }
   }
 
+  if(!setBacklight(0 << 8)) return 1;
   return 0;
 }
