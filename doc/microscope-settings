@@ -1,0 +1,14 @@
+Streaming Parameters Video Capture:
+        Capabilities     : timeperframe
+        Frames per second: 30.000 (30/1)
+        Read buffers     : 0
+                     brightness (int)    : min=-128 max=127 step=1 default=0 value=0
+                       contrast (int)    : min=0 max=64 step=1 default=32 value=16
+                     saturation (int)    : min=0 max=128 step=1 default=32 value=32
+                            hue (int)    : min=-180 max=180 step=1 default=0 value=0
+ white_balance_temperature_auto (bool)   : default=1 value=0
+                          gamma (int)    : min=1 max=500 step=1 default=100 value=100
+           power_line_frequency (menu)   : min=0 max=2 default=1 value=1
+      white_balance_temperature (int)    : min=2800 max=6500 step=1 default=4000 value=4000
+                      sharpness (int)    : min=0 max=15 step=1 default=1 value=0
+         backlight_compensation (int)    : min=0 max=1 step=1 default=0 value=0
