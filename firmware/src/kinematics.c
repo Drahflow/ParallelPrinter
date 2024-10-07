@@ -916,3 +916,12 @@ void checkForceLimiting() {
     }
   }
 }
+
+void dumpStepPositions() {
+  console_send_str("Step positions ");
+  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+    console_send_int32(stepsUp[axis]);
+    console_send_str(" ");
+  }
+  console_send_str("\r\n");
+}

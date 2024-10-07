@@ -112,6 +112,12 @@ void initMotorDrivers() {
 #endif
 }
 
+void disableMotors() {
+  for(uint32_t i = 0; i < MOTOR_COUNT; ++i) {
+    gpio_out_write(motors[i].enable, 1);
+  }
+}
+
 #define WAIT_UART 10000
 
 static void updateCRC(uint8_t byte, uint8_t *crc) {

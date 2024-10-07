@@ -1047,10 +1047,12 @@ usb_state_ready(void)
     }
 }
 
-static uint8_t transmit_buf[512], transmit_pos;
-static uint8_t receive_buf[512], receive_pos;
+static uint8_t transmit_buf[512];
+static uint16_t transmit_pos;
+static uint8_t receive_buf[512];
+static uint16_t receive_pos;
 
-void usb_ep0_task(void)
+static void usb_ep0_task(void)
 {
     if (usb_xfer_flags)
         usb_do_xfer(usb_xfer_data, usb_xfer_size, usb_xfer_flags);
@@ -1058,10 +1060,10 @@ void usb_ep0_task(void)
         usb_state_ready();
 }
 
-void
+static void
 usb_bulk_in_task(void)
 {
-    uint_fast8_t tpos = transmit_pos;
+    uint_fast16_t tpos = transmit_pos;
     if (!tpos)
         return;
     uint_fast8_t max_tpos = (tpos > USB_CDC_EP_BULK_IN_SIZE
@@ -1069,7 +1071,7 @@ usb_bulk_in_task(void)
     int_fast8_t ret = usb_send_bulk_in(transmit_buf, max_tpos);
     if (ret <= 0)
         return;
-    uint_fast8_t needcopy = tpos - ret;
+    uint_fast16_t needcopy = tpos - ret;
     if (needcopy) {
         memmove(transmit_buf, &transmit_buf[ret], needcopy);
         usb_notify_bulk_in();
@@ -1077,11 +1079,32 @@ usb_bulk_in_task(void)
     transmit_pos = needcopy;
 }
 
-void
+static bool redoingConsole = false;
+
+static
+void console_receive_task(void) {
+    uint_fast16_t rpos = receive_pos;
+    // Process input
+    int_fast16_t pop_count = console_receive(receive_buf, rpos);
+    if (pop_count) {
+        redoingConsole = false;
+
+        // Move buffer
+        uint_fast16_t needcopy = rpos - pop_count;
+        if (needcopy) {
+            memmove(receive_buf, &receive_buf[pop_count], needcopy);
+            usb_notify_bulk_out();
+        }
+        rpos = needcopy;
+    }
+    receive_pos = rpos;
+}
+
+static void
 usb_bulk_out_task(void)
 {
     // Read data
-    uint_fast8_t rpos = receive_pos;
+    uint_fast16_t rpos = receive_pos;
     if (rpos + USB_CDC_EP_BULK_OUT_SIZE <= sizeof(receive_buf)) {
         int_fast8_t ret = usb_read_bulk_out(
             &receive_buf[rpos], USB_CDC_EP_BULK_OUT_SIZE);
@@ -1092,18 +1115,10 @@ usb_bulk_out_task(void)
     } else {
         usb_notify_bulk_out();
     }
-    // Process input
-    int_fast8_t pop_count = console_receive(receive_buf, rpos);
-    if (pop_count) {
-        // Move buffer
-        uint_fast8_t needcopy = rpos - pop_count;
-        if (needcopy) {
-            memmove(receive_buf, &receive_buf[pop_count], needcopy);
-            usb_notify_bulk_out();
-        }
-        rpos = needcopy;
-    }
+
     receive_pos = rpos;
+
+    console_receive_task();
 }
 
 void runUSB() {
@@ -1124,11 +1139,21 @@ void runUSB() {
 
     usb_bulk_out_task();
   }
+
+  if(redoingConsole) {
+    console_receive_task();
+  }
 }
 
-void usb_console_send(const uint8_t *buf, uint_fast8_t buf_len) {
+// Repeat console input buffer scanning when waiting on non-usb
+// triggered events while "executing" a console command.
+void redoConsoleForWait() {
+  redoingConsole = true;
+}
+
+void usb_console_send(const uint8_t *buf, uint_fast16_t buf_len) {
   // Verify space for message
-  uint_fast8_t tpos = transmit_pos;
+  uint_fast16_t tpos = transmit_pos;
   if (tpos + buf_len > sizeof(transmit_buf))
       // Not enough space for message
       return;

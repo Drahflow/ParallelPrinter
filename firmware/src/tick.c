@@ -85,6 +85,7 @@ void SysTick_IRQ_Handler() {
     if(!moreSteps) {
       schedule->completed = 1;
       motorSchedule = schedule->next;
+      setMotorDirections(motorSchedule);
     }
   }
 

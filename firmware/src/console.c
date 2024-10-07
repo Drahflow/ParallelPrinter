@@ -131,6 +131,50 @@ void interactiveMotor(const uint8_t *buf, Motor *m, char up, char UP, char down,
   if(buf[0] == DOWN) { multiStep(m, DIR_MAIN_AXIS_DOWN); }
 }
 
+static void singleStepAll(uint8_t direction) {
+  oneStep = noSteps;
+
+  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+    MotorSchedule *motor = oneStep.motors + axis;
+    motor->count = 1;
+    motor->timer = ~0u;
+    motor->dt = ~0u;
+    motor->dir = direction;
+  }
+  oneStep.next = NULL;
+
+  scheduleMotors(&oneStep);
+}
+
+static void multiStepAll(uint8_t direction) {
+  start = noSteps;
+  run = noSteps;
+  stop = noSteps;
+
+  for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
+    start.motors[axis] = startTemplate;
+    run.motors[axis] = runTemplate;
+    stop.motors[axis] = stopTemplate;
+
+    start.motors[axis].dir = direction;
+    run.motors[axis].dir = direction;
+    stop.motors[axis].dir = direction;
+  }
+
+  start.next = &run;
+  run.next = &stop;
+
+  scheduleMotors(&start);
+}
+
+void interactiveAllMotors(const uint8_t *buf, char up, char UP, char down, char DOWN) {
+  if(buf[0] == up) { singleStepAll(DIR_MAIN_AXIS_UP); }
+  if(buf[0] == UP) { multiStepAll(DIR_MAIN_AXIS_UP); }
+
+  if(buf[0] == down) { singleStepAll(DIR_MAIN_AXIS_DOWN); }
+  if(buf[0] == DOWN) { multiStepAll(DIR_MAIN_AXIS_DOWN); }
+}
+
 uint32_t parseLinearMotionConfig(
   char *name,
   const uint8_t *buf, uint32_t pos, uint32_t buf_len,
@@ -298,7 +342,7 @@ uint32_t rawMoveAxis(const uint8_t *buf, uint32_t pos, uint32_t buf_len, uint8_t
 
 static uint_fast8_t echoed = 0;
 static bool interactive = false;
-int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
+int_fast16_t console_receive(uint8_t *buf, uint_fast16_t buf_len) {
   // console_send((uint8_t *)"\r\nRCV:", 6);
   // console_send(buf, buf_len);
 
@@ -310,6 +354,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     interactiveMotor(buf, motors + 4, 'y', 'Y', 'i', 'I');
     interactiveMotor(buf, motors + 5, 'f', 'F', 'd', 'D');
     interactiveMotor(buf, motors + 6, 'g', 'G', 'h', 'H');
+    interactiveAllMotors(buf, '/', '?', '-', '_');
 
     if(buf[0] == ' ') {
       console_send_str("Interactive mode off.\r\n");
@@ -347,6 +392,10 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     dumpScheduleStatus();
   }
 
+  if(strncmp(cmd, "status:steps", buf_len) == 0) {
+    dumpStepPositions();
+  }
+
   if(strncmp(cmd, "interactive", buf_len) == 0) {
     interactive = true;
     console_send_str("Interactive mode\r\n");
@@ -364,6 +413,10 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   if(strncmp(cmd, "motors:on", buf_len) == 0) {
     initMotorDrivers();
     console_send_str("Motors enabled\r\n");
+  }
+  if(strncmp(cmd, "motors:off", buf_len) == 0) {
+    disableMotors();
+    console_send_str("Motors disabled\r\n");
   }
 
   if(strncmp(cmd, "endstop:on", buf_len) == 0) {
@@ -880,6 +933,15 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
     console_send_str("\r\n");
   }
 
+  if(strncmp(cmd, "wait:kinematics", buf_len) == 0) {
+    if(motorsMoving()) {
+      redoConsoleForWait();
+      return 0;
+    }
+
+    console_send_str("Kinematics quiesced\r\n");
+  }
+
   if(strncmp(cmd, "debug:endstop:on", buf_len) == 0) {
     endstopDebug = true;
     console_send_str("Endstop debug enabled\r\n");
@@ -903,7 +965,7 @@ int_fast8_t console_receive(uint8_t *buf, uint_fast8_t buf_len) {
   return buf_len;
 }
 
-void console_send(const uint8_t *buf, uint_fast8_t buf_len) {
+void console_send(const uint8_t *buf, uint_fast16_t buf_len) {
   usb_console_send(buf, buf_len);
 }
 

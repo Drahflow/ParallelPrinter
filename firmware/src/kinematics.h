@@ -56,5 +56,6 @@ void moveTo(Position);
 void moveAgain();
 void kinematicsStop();
 void checkForceLimiting();
+void dumpStepPositions();
 
 #endif
