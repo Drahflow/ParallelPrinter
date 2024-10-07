@@ -123,7 +123,7 @@ int main(int argc, const char **argv) {
 
   cout << "========" << endl;
 
-  for(int i = 0; i < 256; ++i) {
+  while(true) {
     struct v4l2_buffer buf;
     buf.type = bufReq.type;
     buf.memory = bufReq.memory;
@@ -136,15 +136,15 @@ int main(int argc, const char **argv) {
     }
 
     for(unsigned int y = 0; y < videoHeight; ++y) {
-      uint8_t lineOut[videoWidth];
+      uint8_t lineOut[videoWidth * 2];
 
       for(unsigned int x = 0; x < videoWidth; ++x) {
-        uint8_t lum = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + x * 2] & 0xF0;
-        uint8_t Cb = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + ((x * 2) & ~3) + 1] & 0xF0;
-        uint8_t Cr = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + ((x * 2) & ~3) + 3] & 0xF0;
+        uint8_t lum = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + x * 2];
+        uint8_t Cb = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + ((x * 2) & ~3) + 1];
+        uint8_t Cr = buffers[buf.index][y * yuv422.fmt.pix.bytesperline + ((x * 2) & ~3) + 3];
 
-        lineOut[x] = lum | ((x & 1)? Cb: Cr) >> 4;
-        // lineOut[x * 2 + 1] = x & 1? Cb: Cr;
+        lineOut[x * 2] = lum;
+        lineOut[x * 2 + 1] = x & 1? Cb: Cr;
         // if(lum < 64) {
         //   cout << " ";
         // } else if(lum < 128) {

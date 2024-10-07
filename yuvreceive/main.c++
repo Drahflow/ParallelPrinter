@@ -66,7 +66,7 @@ int main(void) {
     int ret = SDL_LockSurface(surface);
     if(ret) exitWithDetails();
 
-    uint8_t input[width * height];
+    uint8_t input[width * height * 2];
     unsigned int completed = 0;
     while(completed < sizeof(input)) {
       int len = read(0, input + completed, sizeof(input) - completed);
@@ -85,9 +85,9 @@ int main(void) {
 
     for(int y = 0; y < height; ++y) {
       for(int x = 0; x < width; ++x) {
-        int Y = input[(y * width + x)] & 0xF0;
-        int V = (input[((y * width + x) & ~1) + 0] & 0xF) << 4;
-        int U = (input[((y * width + x) & ~1) + 1] & 0xF) << 4;
+        int Y = input[(y * width + x) * 2];
+        int V = input[(((y * width + x) * 2) & ~3) + 1];
+        int U = input[(((y * width + x) * 2) & ~3) + 3];
 
         Y -=  16;
         U -= 128;
