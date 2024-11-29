@@ -673,7 +673,7 @@ void setZero(Position initialToolPosition) {
 static OutputSchedule *getFreeSchedule() {
     printf("Scheduling into buffer %d\n", nextFreeSchedule);
     OutputSchedule *sched = scheduleBuffer + nextFreeSchedule;
-    if(!sched->completed) {
+    if(!atomic_load_explicit(&sched->completed, memory_order_acquire)) {
       return NULL;
     }
 
@@ -697,7 +697,7 @@ static void scheduleStepDelta(OutputSchedule *sched, double intervalDuration, in
 
   int lastSchedule = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT - 1) % SCHEDULE_BUFFER_COUNT;
   int last2Schedule = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT - 2) % SCHEDULE_BUFFER_COUNT;
-  if(scheduleBuffer[last2Schedule].completed) {
+  if(atomic_explicit_load(&scheduleBuffer[last2Schedule].completed, memory_order_acquire)) {
     // Resynchronize with systick
     while(motorsMoving());
 
@@ -716,7 +716,7 @@ void runKinematics() {
   if(!kinematicsAvailable) return;
   if(currentTarget == -1) return;
   int lookAhead = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT / 4) % SCHEDULE_BUFFER_COUNT;
-  if(!scheduleBuffer[lookAhead].completed) {
+  if(!atomic_explicit_load(&scheduleBuffer[lookAhead].completed, memory_order_acquire)) {
     //printf("Waiting for schedule buffer %d\n", lookAhead);
     return;
   }

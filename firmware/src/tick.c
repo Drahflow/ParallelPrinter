@@ -22,7 +22,7 @@ void disableSystick() {
   SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk;
 }
 
-static OutputSchedule *volatile motorSchedule = NULL;
+static OutputSchedule *_Atomic motorSchedule = NULL;
 uint32_t motorPulses = 0;
 
 static inline void setMotorDirection(MotorSchedule *schedule, GPIO_TypeDef *dir_gpio, uint32_t dir_pin) {
@@ -67,7 +67,7 @@ uint32_t endstopWaitDuration;
 uint32_t endstopInitDuration = 1000;
 
 void SysTick_IRQ_Handler() {
-  OutputSchedule *schedule = motorSchedule;
+  OutputSchedule *schedule = atomic_load_explicit(&motorSchedule, memory_order_acquire);
   if(schedule) {
     bool moreSteps =
       executeMotorSchedule(schedule->motors + 0, GPIOC, 13, 1 << 0) |
@@ -83,9 +83,11 @@ void SysTick_IRQ_Handler() {
       0;
 
     if(!moreSteps) {
-      schedule->completed = 1;
-      motorSchedule = schedule->next;
-      setMotorDirections(motorSchedule);
+      OutputSchedule *next = schedule->next;
+      if(next) setMotorDirections(next);
+      motorSchedule = next;
+
+      atomic_store_explicit(&schedule->completed, 1, memory_order_release);
     }
   }
 
@@ -136,7 +138,7 @@ void stopEndstopScan() {
 
 void scheduleMotors(OutputSchedule *schedule) {
   setMotorDirections(schedule);
-  motorSchedule = schedule;
+  atomic_store_explicit(&motorSchedule, schedule, memory_order_release);
 }
 
 bool motorsMoving() {

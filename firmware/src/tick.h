@@ -20,7 +20,7 @@ typedef struct MotorSchedule {
 
 typedef struct OutputSchedule {
   MotorSchedule motors[MOTOR_COUNT];
-  uint8_t completed;
+  _Atomic uint8_t completed;
   struct OutputSchedule *next;
 } OutputSchedule;
 
