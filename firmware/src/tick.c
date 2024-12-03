@@ -4,8 +4,10 @@
 #include "config.h"
 #include "console.h"
 #include "endstop.h"
+#include "motor.h" // DEBUG
 
 #include <stddef.h>
+#include <stdatomic.h>
 
 void enableSystick() {
   SysTick->LOAD = CONFIG_CLOCK_FREQ / CONFIG_TICK_FREQ - 1u;
@@ -25,24 +27,25 @@ void disableSystick() {
 static OutputSchedule *_Atomic motorSchedule = NULL;
 uint32_t motorPulses = 0;
 
-static inline void setMotorDirection(MotorSchedule *schedule, GPIO_TypeDef *dir_gpio, uint32_t dir_pin) {
+static inline void setMotorDirection(MotorSchedule *schedule, Motor *motor, GPIO_TypeDef *dir_gpio, uint32_t dir_pin) {
   dir_gpio->BSRR |= schedule->dir? (1u << dir_pin): (1u << (dir_pin + 16));
+  motor->stepDir = schedule->dir? -1: 1;
 }
 
 static inline void setMotorDirections(OutputSchedule *schedule) {
-  setMotorDirection(schedule->motors + 0, GPIOC, 14);
-  setMotorDirection(schedule->motors + 1, GPIOE,  5);
-  setMotorDirection(schedule->motors + 2, GPIOE,  0);
-  setMotorDirection(schedule->motors + 3, GPIOB,  9);
-  setMotorDirection(schedule->motors + 4, GPIOB,  4);
-  setMotorDirection(schedule->motors + 5, GPIOB,  3);
-  setMotorDirection(schedule->motors + 6, GPIOD,  2);
-  setMotorDirection(schedule->motors + 7, GPIOA,  9);
-  setMotorDirection(schedule->motors + 8, GPIOC,  7);
-  setMotorDirection(schedule->motors + 9, GPIOC,  6);
+  setMotorDirection(schedule->motors + 0, motors + 0, GPIOC, 14);
+  setMotorDirection(schedule->motors + 1, motors + 1, GPIOE,  5);
+  setMotorDirection(schedule->motors + 2, motors + 2, GPIOE,  0);
+  setMotorDirection(schedule->motors + 3, motors + 3, GPIOB,  9);
+  setMotorDirection(schedule->motors + 4, motors + 4, GPIOB,  4);
+  setMotorDirection(schedule->motors + 5, motors + 5, GPIOB,  3);
+  setMotorDirection(schedule->motors + 6, motors + 6, GPIOD,  2);
+  setMotorDirection(schedule->motors + 7, motors + 7, GPIOA,  9);
+  setMotorDirection(schedule->motors + 8, motors + 8, GPIOC,  7);
+  setMotorDirection(schedule->motors + 9, motors + 9, GPIOC,  6);
 }
 
-static inline bool executeMotorSchedule(MotorSchedule *schedule, GPIO_TypeDef *step_gpio, uint32_t step_pin, uint32_t pulseMask) {
+static inline bool executeMotorSchedule(MotorSchedule *schedule, Motor *motor, GPIO_TypeDef *step_gpio, uint32_t step_pin, uint32_t pulseMask) {
   if(!schedule->count) return false;
 
   uint32_t oldTimer = schedule->timer;
@@ -53,6 +56,7 @@ static inline bool executeMotorSchedule(MotorSchedule *schedule, GPIO_TypeDef *s
   if(schedule->timer < oldTimer) {
     motorPulses ^= pulseMask;
     step_gpio->BSRR |= (motorPulses & pulseMask)? (1u << step_pin): (1u << (step_pin + 16));
+    motor->steps += motor->stepDir;
 
     --schedule->count;
   }
@@ -70,16 +74,16 @@ void SysTick_IRQ_Handler() {
   OutputSchedule *schedule = atomic_load_explicit(&motorSchedule, memory_order_acquire);
   if(schedule) {
     bool moreSteps =
-      executeMotorSchedule(schedule->motors + 0, GPIOC, 13, 1 << 0) |
-      executeMotorSchedule(schedule->motors + 1, GPIOE,  4, 1 << 1) |
-      executeMotorSchedule(schedule->motors + 2, GPIOE,  1, 1 << 2) |
-      executeMotorSchedule(schedule->motors + 3, GPIOB,  8, 1 << 3) |
-      executeMotorSchedule(schedule->motors + 4, GPIOB,  5, 1 << 4) |
-      executeMotorSchedule(schedule->motors + 5, GPIOG, 15, 1 << 5) |
-      executeMotorSchedule(schedule->motors + 6, GPIOD,  3, 1 << 6) |
-      executeMotorSchedule(schedule->motors + 7, GPIOA, 10, 1 << 7) |
-      executeMotorSchedule(schedule->motors + 8, GPIOA,  8, 1 << 8) |
-      executeMotorSchedule(schedule->motors + 9, GPIOG,  6, 1 << 9) |
+      executeMotorSchedule(schedule->motors + 0, motors + 0, GPIOC, 13, 1 << 0) |
+      executeMotorSchedule(schedule->motors + 1, motors + 1, GPIOE,  4, 1 << 1) |
+      executeMotorSchedule(schedule->motors + 2, motors + 2, GPIOE,  1, 1 << 2) |
+      executeMotorSchedule(schedule->motors + 3, motors + 3, GPIOB,  8, 1 << 3) |
+      executeMotorSchedule(schedule->motors + 4, motors + 4, GPIOB,  5, 1 << 4) |
+      executeMotorSchedule(schedule->motors + 5, motors + 5, GPIOG, 15, 1 << 5) |
+      executeMotorSchedule(schedule->motors + 6, motors + 6, GPIOD,  3, 1 << 6) |
+      executeMotorSchedule(schedule->motors + 7, motors + 7, GPIOA, 10, 1 << 7) |
+      executeMotorSchedule(schedule->motors + 8, motors + 8, GPIOA,  8, 1 << 8) |
+      executeMotorSchedule(schedule->motors + 9, motors + 9, GPIOG,  6, 1 << 9) |
       0;
 
     if(!moreSteps) {

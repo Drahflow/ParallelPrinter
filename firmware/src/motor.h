@@ -9,6 +9,8 @@
 typedef struct Motor Motor;
 struct Motor {
   uint32_t index;
+  int32_t stepDir; // DEBUG only
+  int32_t steps; // DEBUG only
 
   struct gpio_out enable;
   struct gpio_out step;

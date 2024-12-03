@@ -1010,6 +1010,27 @@ void console_send_int32(int32_t n) {
   }
 }
 
+void console_send_uint32_decimal(uint32_t n) {
+  uint8_t buf[10];
+  uint32_t p = 9;
+  uint32_t val = n;
+  for(uint32_t i = 0; i < 10; ++i) {
+    buf[p--] = '0' + (val % 10);
+    val /= 10;
+  }
+
+  console_send(buf, sizeof(buf));
+}
+
+void console_send_int32_decimal(int32_t n) {
+  if(n < 0) {
+    console_send_str("-");
+    console_send_uint32_decimal(-n);
+  } else {
+    console_send_uint32_decimal(n);
+  }
+}
+
 void console_send_uint8(uint32_t n) {
   uint8_t buf[14];
   uint32_t p = 7;
@@ -1029,6 +1050,18 @@ void console_send_uint8(uint32_t n) {
   }
 
   buf[13] = ')';
+
+  console_send(buf, sizeof(buf));
+}
+
+void console_send_uint8_decimal(uint32_t n) {
+  uint8_t buf[3];
+  uint32_t p = 2;
+  uint32_t val = n;
+  for(uint32_t i = 0; i < 3; ++i) {
+    buf[p--] = '0' + (val % 10);
+    val /= 10;
+  }
 
   console_send(buf, sizeof(buf));
 }

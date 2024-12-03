@@ -2,10 +2,12 @@
 
 #include "console.h"
 #include "tick.h"
+#include "motor.h" // DEBUG only
 
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 
 #ifndef TEST
 #define printf(...)
@@ -642,6 +644,7 @@ void setZero(Position initialToolPosition) {
   for(int i = 0; i < MAIN_AXIS_COUNT; ++i) {
     stepsUp[i] = 0;
     abovePlatform[i] = true;
+    motors[i].steps = 0;
   }
 
   const Position zero = {{0, 0, 0}, {1, 0, 0, 0}};
@@ -697,7 +700,7 @@ static void scheduleStepDelta(OutputSchedule *sched, double intervalDuration, in
 
   int lastSchedule = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT - 1) % SCHEDULE_BUFFER_COUNT;
   int last2Schedule = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT - 2) % SCHEDULE_BUFFER_COUNT;
-  if(atomic_explicit_load(&scheduleBuffer[last2Schedule].completed, memory_order_acquire)) {
+  if(atomic_load_explicit(&scheduleBuffer[last2Schedule].completed, memory_order_acquire)) {
     // Resynchronize with systick
     while(motorsMoving());
 
@@ -716,7 +719,7 @@ void runKinematics() {
   if(!kinematicsAvailable) return;
   if(currentTarget == -1) return;
   int lookAhead = (nextFreeSchedule + SCHEDULE_BUFFER_COUNT / 4) % SCHEDULE_BUFFER_COUNT;
-  if(!atomic_explicit_load(&scheduleBuffer[lookAhead].completed, memory_order_acquire)) {
+  if(!atomic_load_explicit(&scheduleBuffer[lookAhead].completed, memory_order_acquire)) {
     //printf("Waiting for schedule buffer %d\n", lookAhead);
     return;
   }
@@ -918,10 +921,14 @@ void checkForceLimiting() {
 }
 
 void dumpStepPositions() {
-  console_send_str("Step positions ");
+  console_send_str("Step positions\r\n");
   for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-    console_send_int32(stepsUp[axis]);
-    console_send_str(" ");
+    console_send_str("Motor[");
+    console_send_uint8_decimal(axis);
+    console_send_str("] Kinematics: ");
+    console_send_int32_decimal(stepsUp[axis]);
+    console_send_str(" Interrupt: ");
+    console_send_int32_decimal(motors[axis].steps);
+    console_send_str("\r\n");
   }
-  console_send_str("\r\n");
 }
