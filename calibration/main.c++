@@ -11,6 +11,41 @@
 #include <unistd.h>
 #include <linux/videodev2.h>
 
+/**
+ * The overall plan
+ *
+ * Configure stdin as a raw terminal -> term
+ * Configure /dev/ttyACM0 as raw terminal -> printer
+ * Configure /dev/video0 as streaming capture -> camera
+ * Configure TCP/IP socket for video output -> stream
+ * Configure piped adb to tabletTarget -> tablet
+ * Configure calibration.dat -> calibration
+ * Configure timer interval -> time
+ *
+ * Event on term ->
+ *   Maintain local line buffer
+ *   Parse local commands
+ *   Forward everything to -> printer
+ * Event on printer ->
+ *   Maintain local line buffer
+ *   Parse expected replies
+ *   Forward everything to (filtered) -> term
+ *   Update movement finished info
+ *   Update steps info
+ * Event on camera ->
+ *   If enabled and movement finished, run computer vision
+ *     On hit log to -> calibration.dat
+ *     On miss issue new commands to -> tablet
+ *   Send CV data with raw image to -> stream
+ * No events on stream
+ * Event on tablet ->
+ *   Prefix and forward to -> term
+ * No events on calibration.dat
+ * Tick on time ->
+ *   Run calibration sequence step
+ *   Request current status from -> printer
+ */
+
 using namespace std;
 
 constexpr int videoWidth = 640;
