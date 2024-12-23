@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS=-W -Wall -Wextra -Werror -O3 -flto
+CXXFLAGS=-W -Wall -Wextra -Werror -O3 -flto -ggdb
 
 SOURCES := $(wildcard *.c++)
 OBJECTS := $(SOURCES:%.c++=%.o)

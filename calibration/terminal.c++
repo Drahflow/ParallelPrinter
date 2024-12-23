@@ -4,6 +4,7 @@
 #include "microscope.h"
 #include "printer.h"
 #include "tablet.h"
+#include "video_feed.h"
 
 #include <iostream>
 #include <cstring>
@@ -72,20 +73,29 @@ void Terminal::parse(char *input) {
 
   if(args[0] == "connect:printer" && args.size() > 1) {
     cout << "Connecting to printer on " << args[1] << endl;
-    connections->printer = Printer::open(args[1].c_str(), connections);
-    connections->printer->addToEpoll(connections->epollFd);
-  }
-
-  if(args[0] == "connect:microscope" && args.size() > 1) {
+    if((connections->printer = Printer::open(args[1].c_str(), connections))) {
+      connections->printer->addToEpoll(connections->epollFd);
+    }
+  } else if(args[0] == "connect:microscope" && args.size() > 1) {
     cout << "Connecting to microscope on " << args[1] << endl;
-    connections->microscope = Microscope::open(args[1].c_str(), connections);
-    connections->microscope->addToEpoll(connections->epollFd);
-  }
-
-  if(args[0] == "connect:tablet") {
+    if((connections->microscope = Microscope::open(args[1].c_str(), connections))) {
+      connections->microscope->addToEpoll(connections->epollFd);
+    }
+  } else if(args[0] == "connect:tablet") {
     cout << "Connecting to tablet" << endl;
-    connections->tablet = Tablet::open(connections);
-    connections->tablet->addToEpoll(connections->epollFd);
+    if((connections->tablet = Tablet::open(connections))) {
+      connections->tablet->addToEpoll(connections->epollFd);
+    }
+  } else if(args[0] == "connect:video") {
+    cout << "Connecting to video output to " << args[1] << endl;
+    if((connections->videoFeed = VideoFeed::open(args[1], connections))) {
+      connections->videoFeed->addToEpoll(connections->epollFd);
+    }
+  } else if(connections->printer) {
+    connections->printer->write(input, strlen(input));
+    connections->printer->write("\r\n", 2);
+  } else {
+    cerr << "Printer not yet connected, dropping unknown command." << endl;
   }
 }
 
