@@ -7,7 +7,7 @@ OBJECTS := $(SOURCES:%.c++=%.o)
 calibration: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-%.o: %.c++
+%.o: %.c++ *.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:

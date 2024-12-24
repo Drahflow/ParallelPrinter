@@ -12,11 +12,11 @@
 
 using namespace std;
 
-unique_ptr<Printer> Printer::open(const char *device, Connections *connections) {
+unique_ptr<Printer> Printer::open(const string &device, Connections *connections) {
   auto result = make_unique<Printer>();
   result->connections = connections;
 
-  result->fd = ::open(device, O_RDWR | O_NOCTTY);
+  result->fd = ::open(device.c_str(), O_RDWR | O_NOCTTY);
   if(result->fd == -1) {
     cerr << "Could not open " << device << ": " << strerror(errno) << endl;
     return {};

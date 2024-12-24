@@ -4,6 +4,7 @@
 #include "epollable.h"
 
 #include <memory>
+#include <string>
 
 class Connections;
 
@@ -13,7 +14,7 @@ class Printer: public Epollable {
     int fd;
 
   public:
-    static std::unique_ptr<Printer> open(const char *device, Connections *);
+    static std::unique_ptr<Printer> open(const std::string &device, Connections *);
     ~Printer();
 
     int getEpollFd() override;

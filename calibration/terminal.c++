@@ -5,6 +5,7 @@
 #include "printer.h"
 #include "tablet.h"
 #include "video_feed.h"
+#include "calibration_log.h"
 
 #include <iostream>
 #include <cstring>
@@ -91,6 +92,9 @@ void Terminal::parse(char *input) {
     if((connections->videoFeed = VideoFeed::open(args[1], connections))) {
       connections->videoFeed->addToEpoll(connections->epollFd);
     }
+  } else if(args[0] == "connect:log") {
+    cout << "Appending to calibration log " << args[1] << endl;
+    connections->calibrationLog = CalibrationLog::open(args[1], connections);
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));
     connections->printer->write("\r\n", 2);
