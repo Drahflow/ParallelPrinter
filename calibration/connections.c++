@@ -5,6 +5,8 @@
 #include "tablet.h"
 #include "video_feed.h"
 #include "calibration_log.h"
+#include "current_position.h"
+#include "microscope_focus.h"
 
 Connections::Connections() = default;
 Connections::~Connections() = default;

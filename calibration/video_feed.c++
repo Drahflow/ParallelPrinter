@@ -72,6 +72,7 @@ unique_ptr<VideoFeed> VideoFeed::open(const string &peer, Connections *connectio
   cerr << "Video feed forwarded to " << host << endl;
   freeaddrinfo(peerInfos);
 
+  result->write("========\n", 9);
   return result;
 }
 
@@ -92,12 +93,13 @@ void VideoFeed::available() {
   char buffer[4096];
   int ret = read(fd, buffer, sizeof(buffer));
   if(ret == -1) {
-    cerr << "Failed to read socket: " << strerror(errno) << endl;
+    cerr << "Failed to read video feed socket: " << strerror(errno) << endl;
     return;
   }
 
   if(ret == 0) {
-    cerr << "EOF on socket: " << strerror(errno) << endl;
+    cerr << "EOF on video feed socket: " << strerror(errno) << endl;
+    removeFromEpoll(connections->epollFd);
     return;
   }
 

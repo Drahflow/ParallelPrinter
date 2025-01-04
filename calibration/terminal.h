@@ -14,7 +14,7 @@ class Terminal: public Epollable {
     char buffer[4096];
     unsigned int readPos;
 
-    void parse(char *);
+    void parse(const char *);
 
   public:
     static std::unique_ptr<Terminal> open(Connections *);

@@ -19,3 +19,10 @@ bool Epollable::addToEpoll(int epollFd) {
 
   return true;
 }
+
+void Epollable::removeFromEpoll(int epollFd) {
+  int ret = epoll_ctl(epollFd, EPOLL_CTL_DEL, getEpollFd(), nullptr);
+  if(ret == -1) {
+    cerr << "Cannot un-poll input: " << strerror(errno) << endl;
+  }
+}

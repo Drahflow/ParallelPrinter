@@ -3,5 +3,6 @@
 
 constexpr int videoWidth = 640;
 constexpr int videoHeight = 480;
+constexpr int mainAxisCount = 7;
 
 #endif

@@ -6,13 +6,18 @@
 #include "tablet.h"
 #include "video_feed.h"
 #include "calibration_log.h"
+#include "current_position.h"
 
 #include <iostream>
 #include <cstring>
 #include <vector>
+#include <sstream>
 #include <unistd.h>
+#include <ranges>
 
 using namespace std;
+using namespace std::views;
+using namespace std::ranges;
 
 unique_ptr<Terminal> Terminal::open(Connections *connections) {
   auto result = make_unique<Terminal>();
@@ -55,9 +60,9 @@ void Terminal::available() {
   }
 }
 
-void Terminal::parse(char *input) {
+void Terminal::parse(const char *input) {
   vector<string> args;
-  for(char *i = input, *start = input; ; ++i) {
+  for(const char *i = input, *start = input; ; ++i) {
     if(!*i || *i == ' ') {
       args.push_back(string(start, i - start));
       start = i + 1;
@@ -95,6 +100,44 @@ void Terminal::parse(char *input) {
   } else if(args[0] == "connect:log") {
     cout << "Appending to calibration log " << args[1] << endl;
     connections->calibrationLog = CalibrationLog::open(args[1], connections);
+  } else if(args[0] == "tablet") {
+    if(connections->tablet) {
+      auto s = (args | drop(1) | join_with(' ') | to<string>()) + "\n";
+      connections->tablet->write(s.data(), s.size());
+    } else {
+      cerr << "Tablet not yet connected." << endl;
+    }
+  } else if(args[0] == "log:placement") {
+    if(!connections->calibrationLog) {
+      cerr << "Calibration log not connected." << endl;
+      return;
+    }
+    if(args.size() != 2) {
+      cerr << "Expected <placement index>." << endl;
+      return;
+    }
+
+    double index;
+    if(!parseDouble(args[1], &index)) {
+      cerr << "Could not parse index." << endl;
+      return;
+    }
+
+    connections->calibrationLog->setTabletPlacement(static_cast<int>(index));
+  } else if(args[0] == "log:comment") {
+    if(!connections->calibrationLog) {
+      cerr << "Calibration log not connected." << endl;
+      return;
+    }
+
+    connections->calibrationLog->writeComment(args | drop(1) | join_with(' ') | to<string>());
+  } else if(args[0] == "log:position") {
+    if(!connections->calibrationLog) {
+      cerr << "Calibration log not connected." << endl;
+      return;
+    }
+
+    connections->calibrationLog->writeCurrentPosition();
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));
     connections->printer->write("\r\n", 2);

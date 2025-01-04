@@ -2,9 +2,11 @@
 
 #include "connections.h"
 #include "terminal.h"
+#include "current_position.h"
 
 #include <iostream>
 #include <cstring>
+#include <vector>
 
 #include <fcntl.h>
 #include <termios.h>
@@ -15,6 +17,7 @@ using namespace std;
 unique_ptr<Printer> Printer::open(const string &device, Connections *connections) {
   auto result = make_unique<Printer>();
   result->connections = connections;
+  result->lineBufferEnd = result->lineBuffer;
 
   result->fd = ::open(device.c_str(), O_RDWR | O_NOCTTY);
   if(result->fd == -1) {
@@ -49,6 +52,14 @@ unique_ptr<Printer> Printer::open(const string &device, Connections *connections
     }
   }
 
+  {
+    int ret = tcsetattr(result->fd, TCSANOW, &setup);
+    if(ret == -1) {
+      cerr << "Could not set terminal attributes: " << strerror(errno) << endl;
+      return {};
+    }
+  }
+
   return result;
 }
 
@@ -65,6 +76,45 @@ int Printer::getEpollFd() {
   return fd;
 }
 
+void Printer::parsePrinterReply(const char *buffer, int len) {
+  auto copyLen = min(static_cast<ptrdiff_t>(len), lineBuffer + sizeof(lineBuffer) - lineBufferEnd);
+  memcpy(lineBufferEnd, buffer, copyLen);
+  lineBufferEnd += copyLen;
+
+  if(lineBufferEnd == lineBuffer + sizeof(lineBuffer)) {
+    cerr << "Printer reply parsing buffer exceeded. Resetting." << endl;
+    lineBufferEnd = lineBuffer;
+  }
+
+  for(char *c = lineBuffer; c < lineBufferEnd; ++c) {
+    if(*c == '\n') {
+      cout << "Line from printer: " << string(lineBuffer, c - lineBuffer) << flush;
+      char *lineEnd = c;
+      if(lineEnd > lineBuffer && *(lineEnd - 1) == '\r') --lineEnd;
+
+      vector<string> args;
+      const char *i, *start;
+      for(i = lineBuffer, start = lineBuffer; i < lineEnd; ++i) {
+        if(*i == ' ') {
+          args.push_back(string(start, i - start));
+          start = i + 1;
+        }
+      }
+      args.push_back(string(start, i - start));
+
+      cerr << "Intercepted from printer: ";
+      for(auto &i: args) cerr << " " << i;
+      cerr << endl;
+
+      if(connections->currentPosition) connections->currentPosition->parsePrinterReply(args);
+
+      memmove(lineBuffer, c + 1, lineBufferEnd - (c + 1));
+      lineBufferEnd -= (c + 1) - lineBuffer;
+      c = lineBuffer;
+    }
+  }
+}
+
 void Printer::available() {
   char buffer[4096];
   int ret = read(fd, buffer, sizeof(buffer));
@@ -75,13 +125,32 @@ void Printer::available() {
 
   if(ret == 0) {
     cerr << "EOF on tty: " << strerror(errno) << endl;
+    removeFromEpoll(connections->epollFd);
     return;
   }
+
+  parsePrinterReply(buffer, ret);
 
   connections->terminal->write(buffer, ret);
 }
 
 void Printer::write(const char *buf, int len) {
+  vector<string> args;
+  const char *i, *start;
+  for(i = buf, start = buf; i < buf + len; ++i) {
+    if(*i == ' ') {
+      args.push_back(string(start, i - start));
+      start = i + 1;
+    }
+  }
+  args.push_back(string(start, i - start));
+
+  cerr << "Intercepted to printer: ";
+  for(auto &i: args) cerr << " " << i;
+  cerr << endl;
+
+  if(connections->currentPosition) connections->currentPosition->parsePrinterCommand(args);
+
   while(len) {
     int ret = ::write(fd, buf, len);
     if(ret == -1) {

@@ -923,9 +923,9 @@ void checkForceLimiting() {
 void dumpStepPositions() {
   console_send_str("Step positions\r\n");
   for(int axis = 0; axis < MAIN_AXIS_COUNT; ++axis) {
-    console_send_str("Motor[");
+    console_send_str("Motor: ");
     console_send_uint8_decimal(axis);
-    console_send_str("] Kinematics: ");
+    console_send_str(" Kinematics: ");
     console_send_int32_decimal(stepsUp[axis]);
     console_send_str(" Interrupt: ");
     console_send_int32_decimal(motors[axis].steps);

@@ -1,6 +1,7 @@
 #include "globals.h"
 #include "connections.h"
 #include "terminal.h"
+#include "current_position.h"
 
 #include <iostream>
 #include <cerrno>
@@ -50,6 +51,8 @@ using namespace std;
 
 int main(void) {
   Connections connections;
+  connections.currentPosition = CurrentPosition::open(&connections);
+  if(!connections.currentPosition) return 1;
   connections.terminal = Terminal::open(&connections);
   if(!connections.terminal) return 1;
 

@@ -9,6 +9,8 @@ class Printer;
 class Tablet;
 class VideoFeed;
 class CalibrationLog;
+class CurrentPosition;
+class MicroscopeFocus;
 
 struct Connections {
   int epollFd;
@@ -22,6 +24,8 @@ struct Connections {
   std::unique_ptr<Tablet> tablet;
   std::unique_ptr<VideoFeed> videoFeed;
   std::unique_ptr<CalibrationLog> calibrationLog;
+  std::unique_ptr<CurrentPosition> currentPosition;
+  std::unique_ptr<MicroscopeFocus> microscopeFocus;
 };
 
 #endif

@@ -1,3 +1,19 @@
+###
+Calibration setup
+# netcat -lp 4000 | ./yuvreceive
+connect:printer /dev/ttyACM0
+connect:log calibration.log
+connect:microscope /dev/video0
+connect:video 192.168.3.11:4000
+connect:tablet
+tablet /data/local/tmp/su
+tablet /data/local/tmp/tabletTarget
+
+log:placement 0
+tablet target 20 20
+status:steps
+###
+
 motors:on
 
 config:motor 0 256 8

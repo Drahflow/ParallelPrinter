@@ -13,6 +13,11 @@ class Printer: public Epollable {
     Connections *connections;
     int fd;
 
+    char lineBuffer[4096];
+    char *lineBufferEnd;
+
+    void parsePrinterReply(const char *buffer, int len);
+
   public:
     static std::unique_ptr<Printer> open(const std::string &device, Connections *);
     ~Printer();

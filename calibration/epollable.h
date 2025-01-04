@@ -10,6 +10,7 @@ class Epollable {
     virtual void available() = 0;
 
     bool addToEpoll(int epollFd);
+    void removeFromEpoll(int epollFd);
 };
 
 #endif

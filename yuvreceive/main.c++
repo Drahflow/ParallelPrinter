@@ -39,9 +39,6 @@ int main(void) {
   int failed = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   if(failed) exitWithDetails();
 
-  cout << "Waiting for stream begin." << endl;
-  waitForStreamBegin();
-
   SDL_Window *window = SDL_CreateWindow("Video Receiver",
       SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
       width, height, 0);
@@ -49,6 +46,9 @@ int main(void) {
 
   SDL_Surface *surface = SDL_GetWindowSurface(window);
   if(!surface) exitWithDetails();
+
+  cout << "Waiting for stream begin." << endl;
+  waitForStreamBegin();
 
   SDL_Event event;
 

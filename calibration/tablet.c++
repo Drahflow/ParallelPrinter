@@ -2,10 +2,12 @@
 
 #include "connections.h"
 #include "terminal.h"
+#include "current_position.h"
 
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <vector>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -137,14 +139,31 @@ void Tablet::available() {
 
   if(ret == 0) {
     cerr << "EOF on tablet: " << strerror(errno) << endl;
+    removeFromEpoll(connections->epollFd);
     return;
   }
 
-  connections->terminal->write("Tablet: ", strlen("TABLET: "));
+  connections->terminal->write("Tablet: ", strlen("Tablet: "));
   connections->terminal->write(buffer, ret);
 }
 
 void Tablet::write(const char *buf, int len) {
+  vector<string> args;
+  const char *i, *start;
+  for(i = buf, start = buf; i < buf + len; ++i) {
+    if(*i == ' ') {
+      args.push_back(string(start, i - start));
+      start = i + 1;
+    }
+  }
+  args.push_back(string(start, i - start));
+
+  cerr << "Intercepted to tablet: ";
+  for(auto &i: args) cerr << " " << i;
+  cerr << endl;
+
+  if(connections->currentPosition) connections->currentPosition->parseTabletCommand(args);
+
   while(len) {
     int ret = ::write(writeFd, buf, len);
     if(ret == -1) {

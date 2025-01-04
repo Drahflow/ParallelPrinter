@@ -1,5 +1,13 @@
+// This fixes ioctls on old kernels (and the raspi doesn't see the video device with new ones)
+#undef _TIME_BITS
+#define _TIME_BITS 32
+
 #include "microscope.h"
 #include "globals.h"
+#include "connections.h"
+#include "video_frame.h"
+#include "video_feed.h"
+#include "microscope_focus.h"
 
 #include <iostream>
 #include <cerrno>
@@ -41,6 +49,9 @@ unique_ptr<Microscope> Microscope::open(const char *dev, Connections *connection
   }
   if(capabilities.device_caps & V4L2_CAP_STREAMING) {
     cout << "Supports streaming i/o" << endl;
+  } else {
+    cerr << "Required streaming i/o support missing." << endl;
+    return {};
   }
 
   result->yuv422 = make_unique<struct v4l2_format>();
@@ -149,6 +160,8 @@ int Microscope::getEpollFd() {
   return v4l;
 }
 
+static VideoFrame currentFrame;
+
 void Microscope::available() {
   struct v4l2_buffer buf;
   buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -162,33 +175,27 @@ void Microscope::available() {
   }
 
   for(unsigned int y = 0; y < videoHeight; ++y) {
-    uint8_t lineOut[videoWidth * 2];
-
     for(unsigned int x = 0; x < videoWidth; ++x) {
-      uint8_t lum = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + x * 2];
-      uint8_t Cb = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + ((x * 2) & ~3) + 1];
-      uint8_t Cr = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + ((x * 2) & ~3) + 3];
+      currentFrame.data[y * videoWidth * 2 + x * 2] = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + x * 2];
+      currentFrame.data[y * videoWidth * 2 + x * 2 + 1] = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + x * 2 + 1];
+      // uint8_t lum = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + x * 2];
+      // uint8_t Cb = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + ((x * 2) & ~3) + 1];
+      // uint8_t Cr = buffers[buf.index][y * yuv422->fmt.pix.bytesperline + ((x * 2) & ~3) + 3];
 
-      lineOut[x * 2] = lum;
-      lineOut[x * 2 + 1] = x & 1? Cb: Cr;
-      // if(lum < 64) {
-      //   cout << " ";
-      // } else if(lum < 128) {
-      //   cout << ".";
-      // } else if(lum < 192) {
-      //   cout << ":";
-      // } else {
-      //   cout << "#";
-      // }
+      // lineOut[x * 2] = lum;
+      // lineOut[x * 2 + 1] = x & 1? Cb: Cr;
     }
-
-    cout << string(reinterpret_cast<const char *>(lineOut), sizeof(lineOut));
   }
-  flush(cout);
 
   ret = ioctl(v4l, VIDIOC_QBUF, &buf);
   if(ret == -1) {
     cerr << "Cannot re-queue buffer: " << strerror(errno) << endl;
     return;
+  }
+
+  if(connections->videoFeed) {
+    // TODO: More processing steps go here
+    if(connections->microscopeFocus) connections->microscopeFocus->evaluate(&currentFrame);
+    connections->videoFeed->write(reinterpret_cast<const char *>(currentFrame.data), sizeof(currentFrame.data));
   }
 }
