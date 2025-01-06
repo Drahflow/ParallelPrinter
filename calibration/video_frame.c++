@@ -201,8 +201,8 @@ void VideoFrame::renderText(int x, int y, const string &str) {
     for(unsigned int xx = x; xx < x + 7 * str.size(); ++xx) {
       if(xx >= videoWidth) break;
 
-      data[yy * videoWidth * 2 + xx * videoWidth * 2] = 0;
-      data[yy * videoWidth * 2 + xx * videoWidth * 2 + 1] = 0;
+      data[yy * videoWidth * 2 + xx * 2] = 16;
+      data[yy * videoWidth * 2 + xx * 2 + 1] = 128;
     }
   }
 
@@ -213,7 +213,7 @@ void VideoFrame::renderText(int x, int y, const string &str) {
       int bits = font[13 * (character - 32) + r];
 
       for(int c = 0; c < 6; ++c) {
-        if(bits & 1) data[(y + 1 + r) * videoWidth * 2 + (x + 7 * i + 6 - c) * 2] = 255;
+        if(bits & 1) data[(y + 1 + r) * videoWidth * 2 + (x + 7 * i + c) * 2] = 255;
         bits >>= 1;
       }
     }

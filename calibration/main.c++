@@ -2,6 +2,7 @@
 #include "connections.h"
 #include "terminal.h"
 #include "current_position.h"
+#include "microscope_focus.h"
 
 #include <iostream>
 #include <cerrno>
@@ -51,10 +52,9 @@ using namespace std;
 
 int main(void) {
   Connections connections;
-  connections.currentPosition = CurrentPosition::open(&connections);
-  if(!connections.currentPosition) return 1;
-  connections.terminal = Terminal::open(&connections);
-  if(!connections.terminal) return 1;
+  if(!(connections.currentPosition = CurrentPosition::open(&connections))) return 1;
+  if(!(connections.terminal = Terminal::open(&connections))) return 1;
+  if(!(connections.microscopeFocus = MicroscopeFocus::open(&connections))) return 1;
 
   int epoll = epoll_create(8);
   if(epoll == -1) {

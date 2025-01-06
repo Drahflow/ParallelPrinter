@@ -8,6 +8,7 @@
 #include "video_frame.h"
 #include "video_feed.h"
 #include "microscope_focus.h"
+#include "time.h"
 
 #include <iostream>
 #include <cerrno>
@@ -24,7 +25,7 @@
 using namespace std;
 
 unique_ptr<Microscope> Microscope::open(const char *dev, Connections *connections) {
-  int v4l = ::open(dev, O_RDWR);
+  int v4l = ::open(dev, O_RDWR | O_CLOEXEC);
   if(v4l == -1) {
     cerr << "Failed to open: " << dev << ": " << strerror(errno) << endl;
     return {};
@@ -194,8 +195,13 @@ void Microscope::available() {
   }
 
   if(connections->videoFeed) {
+    // uint64_t start = now();
     // TODO: More processing steps go here
     if(connections->microscopeFocus) connections->microscopeFocus->evaluate(&currentFrame);
+    if(connections->microscopeFocus) connections->microscopeFocus->render(&currentFrame);
+    // uint64_t end = now();
+    // cout << "Frame processing took: " << (end - start) / 1000.0 / 1000.0 << "ms" << endl;
+
     connections->videoFeed->write(reinterpret_cast<const char *>(currentFrame.data), sizeof(currentFrame.data));
   }
 }

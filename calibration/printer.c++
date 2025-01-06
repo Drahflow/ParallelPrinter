@@ -19,7 +19,7 @@ unique_ptr<Printer> Printer::open(const string &device, Connections *connections
   result->connections = connections;
   result->lineBufferEnd = result->lineBuffer;
 
-  result->fd = ::open(device.c_str(), O_RDWR | O_NOCTTY);
+  result->fd = ::open(device.c_str(), O_RDWR | O_NOCTTY | O_CLOEXEC);
   if(result->fd == -1) {
     cerr << "Could not open " << device << ": " << strerror(errno) << endl;
     return {};

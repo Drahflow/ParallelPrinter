@@ -1,5 +1,7 @@
 #include "geometry.h"
 
+using namespace std;
+
 bool parseDouble(const std::string &input, double *v) {
   const char *buf = input.data();
   int pos = 0;
@@ -35,3 +37,14 @@ bool parseDouble(const std::string &input, double *v) {
   return true;
 }
 
+ostream &operator << (ostream &out, const Position &p) {
+  return out << "(" << p.disp << "," << p.rot << ")";
+}
+
+ostream &operator << (ostream &out, const Displacement &d) {
+  return out << "(" << d.x << "," << d.y << "," << d.z << ")";
+}
+
+ostream &operator << (ostream &out, const Quaternion &q) {
+  return out << "(" << q.r << "," << q.i << "," << q.j << "," << q.k << ")";
+}

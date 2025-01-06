@@ -7,6 +7,7 @@
 #include "video_feed.h"
 #include "calibration_log.h"
 #include "current_position.h"
+#include "microscope_focus.h"
 
 #include <iostream>
 #include <cstring>
@@ -138,6 +139,13 @@ void Terminal::parse(const char *input) {
     }
 
     connections->calibrationLog->writeCurrentPosition();
+  } else if(args[0] == "focus:reset") {
+    if(!connections->microscopeFocus) {
+      cerr << "Microscope focus not setup." << endl;
+      return;
+    }
+
+    connections->microscopeFocus->reset();
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));
     connections->printer->write("\r\n", 2);
