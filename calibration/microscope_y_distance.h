@@ -1,5 +1,5 @@
-#ifndef H_E164FEC1_EC06_41AB_9D3E_A079FA84D2FB
-#define H_E164FEC1_EC06_41AB_9D3E_A079FA84D2FB
+#ifndef H_F4076738_4B1A_4375_9BC9_85281608BDB3
+#define H_F4076738_4B1A_4375_9BC9_85281608BDB3
 
 #include "geometry.h"
 
@@ -10,21 +10,21 @@
 class Connections;
 class VideoFrame;
 
-class MicroscopeFocus {
+class MicroscopeYDistance {
   private:
     Connections *connections;
-    uint64_t focus;
+    int64_t distance;
     int nextMeasurement;
     std::array<uint64_t, 11> lastMeasurements;
 
-    double zRangeBegin, zRangeEnd;
-    std::array<uint64_t, 256> zRangePlot;
+    double yRangeBegin, yRangeEnd;
+    std::array<uint64_t, 256> yRangePlot;
 
     Position bestPosition;
-    uint64_t bestFocus;
+    uint64_t bestDistance;
 
   public:
-    static std::unique_ptr<MicroscopeFocus> open(Connections *);
+    static std::unique_ptr<MicroscopeYDistance> open(Connections *);
 
     void evaluate(VideoFrame *);
     void render(VideoFrame *);

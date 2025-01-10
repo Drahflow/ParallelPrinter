@@ -8,11 +8,16 @@
 #include "video_frame.h"
 #include "video_feed.h"
 #include "microscope_focus.h"
+#include "microscope_x_distance.h"
+#include "microscope_y_distance.h"
+#include "current_position.h"
 #include "time.h"
 
 #include <iostream>
+#include <iomanip>
 #include <cerrno>
 #include <cstring>
+#include <sstream>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -195,12 +200,32 @@ void Microscope::available() {
   }
 
   if(connections->videoFeed) {
-    // uint64_t start = now();
+#ifdef DEBUG_FRAMETIMINGS
+    uint64_t start = now();
+#endif
+
     // TODO: More processing steps go here
     if(connections->microscopeFocus) connections->microscopeFocus->evaluate(&currentFrame);
+    if(connections->microscopeXDistance) connections->microscopeXDistance->evaluate(&currentFrame);
+    if(connections->microscopeYDistance) connections->microscopeYDistance->evaluate(&currentFrame);
+
     if(connections->microscopeFocus) connections->microscopeFocus->render(&currentFrame);
-    // uint64_t end = now();
-    // cout << "Frame processing took: " << (end - start) / 1000.0 / 1000.0 << "ms" << endl;
+    if(connections->microscopeXDistance) connections->microscopeXDistance->render(&currentFrame);
+    if(connections->microscopeYDistance) connections->microscopeYDistance->render(&currentFrame);
+
+    if(connections->currentPosition) {
+      auto pos = connections->currentPosition->readPrinter();
+      if(pos) {
+        ostringstream text;
+        text << setprecision(10) << "Position: " << *pos;
+        currentFrame.renderText(0, videoHeight - 14, text.str());
+      }
+    }
+
+#ifdef DEBUG_FRAMETIMINGS
+    uint64_t end = now();
+    cout << "Frame processing took: " << (end - start) / 1000.0 / 1000.0 << "ms" << endl;
+#endif
 
     connections->videoFeed->write(reinterpret_cast<const char *>(currentFrame.data), sizeof(currentFrame.data));
   }

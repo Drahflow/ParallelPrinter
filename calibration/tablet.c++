@@ -3,6 +3,7 @@
 #include "connections.h"
 #include "terminal.h"
 #include "current_position.h"
+#include "globals.h"
 
 #include <cerrno>
 #include <cstring>
@@ -158,9 +159,11 @@ void Tablet::write(const char *buf, int len) {
   }
   args.push_back(string(start, i - start));
 
-  cerr << "Intercepted to tablet: ";
+#ifdef DEBUG_INTERCEPTIONS
+  cerr << "Intercepted to tablet:";
   for(auto &i: args) cerr << " " << i;
   cerr << endl;
+#endif
 
   if(connections->currentPosition) connections->currentPosition->parseTabletCommand(args);
 

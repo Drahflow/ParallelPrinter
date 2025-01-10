@@ -2,6 +2,7 @@
 #define H_08625D32_6735_4E35_8205_11224A3BF181
 
 #include <memory>
+#include <vector>
 
 class Terminal;
 class Microscope;
@@ -11,9 +12,16 @@ class VideoFeed;
 class CalibrationLog;
 class CurrentPosition;
 class MicroscopeFocus;
+class MicroscopeAutofocus;
+class MicroscopeXDistance;
+class MicroscopeAutoX;
+class MicroscopeYDistance;
+class MicroscopeAutoY;
+class Tickable;
 
 struct Connections {
   int epollFd;
+  std::vector<Tickable *> tickers;
 
   Connections();
   ~Connections();
@@ -26,6 +34,11 @@ struct Connections {
   std::unique_ptr<CalibrationLog> calibrationLog;
   std::unique_ptr<CurrentPosition> currentPosition;
   std::unique_ptr<MicroscopeFocus> microscopeFocus;
+  std::unique_ptr<MicroscopeAutofocus> microscopeAutofocus;
+  std::unique_ptr<MicroscopeXDistance> microscopeXDistance;
+  std::unique_ptr<MicroscopeAutoX> microscopeAutoX;
+  std::unique_ptr<MicroscopeYDistance> microscopeYDistance;
+  std::unique_ptr<MicroscopeAutoY> microscopeAutoY;
 };
 
 #endif

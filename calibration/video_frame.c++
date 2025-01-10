@@ -219,3 +219,7 @@ void VideoFrame::renderText(int x, int y, const string &str) {
     }
   }
 }
+
+void VideoFrame::setPixel(int x, int y) {
+  data[y * videoWidth * 2 + x * 2] = 255;
+}

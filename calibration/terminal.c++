@@ -8,6 +8,14 @@
 #include "calibration_log.h"
 #include "current_position.h"
 #include "microscope_focus.h"
+#include "microscope_x_distance.h"
+#include "microscope_y_distance.h"
+#include "globals.h"
+#include "main.h"
+#include "time.h"
+#include "microscope_autofocus.h"
+#include "microscope_auto_x.h"
+#include "microscope_auto_y.h"
 
 #include <iostream>
 #include <cstring>
@@ -46,6 +54,12 @@ void Terminal::available() {
     cerr << "Error while reading input: " << strerror(errno) << endl;
     return;
   }
+  if(ret == 0) {
+    cerr << "EOF on terminal." << endl;
+    runMainLoopUntil = now() + 100'000'000;
+    removeFromEpoll(connections->epollFd);
+    return;
+  }
   readPos += ret;
 
   for(unsigned int i = 0; i < readPos; ++i) {
@@ -72,9 +86,11 @@ void Terminal::parse(const char *input) {
     if(!*i) break;
   }
 
+#ifdef DEBUG_INTERCEPTIONS
   cerr << "Got:";
   for(auto &i: args) cerr << " " << i;
   cerr << endl;
+#endif
 
   if(args.empty()) return;
 
@@ -146,12 +162,118 @@ void Terminal::parse(const char *input) {
     }
 
     connections->microscopeFocus->reset();
+  } else if(args[0] == "focus:auto") {
+    if(!connections->microscopeFocus) {
+      cerr << "Microscope focus not setup." << endl;
+      return;
+    }
+
+    double zEnd;
+    if(!parseDouble(args[1], &zEnd)) {
+      cerr << "Could not parse zEnd." << endl;
+      return;
+    }
+
+    double zStep;
+    if(!parseDouble(args[2], &zStep)) {
+      cerr << "Could not parse zStep." << endl;
+      return;
+    }
+
+    auto autofocus = MicroscopeAutofocus::open(connections, zEnd, zStep);
+    if(!autofocus) {
+      cerr << "Could not start autofocus procedure." << endl;
+      return;
+    }
+
+    autofocus->startTicked(connections->tickers);
+    connections->microscopeAutofocus = std::move(autofocus);
+  } else if(args[0] == "x-dist:reset") {
+    if(!connections->microscopeXDistance) {
+      cerr << "Microscope x distance measurement not setup." << endl;
+      return;
+    }
+
+    connections->microscopeXDistance->reset();
+  } else if(args[0] == "x-dist:auto") {
+    if(!connections->microscopeXDistance) {
+      cerr << "Microscope x distance not setup." << endl;
+      return;
+    }
+
+    double xEnd;
+    if(!parseDouble(args[1], &xEnd)) {
+      cerr << "Could not parse xEnd." << endl;
+      return;
+    }
+
+    double xStep;
+    if(!parseDouble(args[2], &xStep)) {
+      cerr << "Could not parse xStep." << endl;
+      return;
+    }
+
+    auto autoX = MicroscopeAutoX::open(connections, xEnd, xStep);
+    if(!autoX) {
+      cerr << "Could not start auto-X procedure." << endl;
+      return;
+    }
+
+    autoX->startTicked(connections->tickers);
+    connections->microscopeAutoX = std::move(autoX);
+  } else if(args[0] == "y-dist:reset") {
+    if(!connections->microscopeYDistance) {
+      cerr << "Microscope y distance measurement not setup." << endl;
+      return;
+    }
+
+    connections->microscopeYDistance->reset();
+  } else if(args[0] == "y-dist:auto") {
+    if(!connections->microscopeXDistance) {
+      cerr << "Microscope y distance not setup." << endl;
+      return;
+    }
+
+    double yEnd;
+    if(!parseDouble(args[1], &yEnd)) {
+      cerr << "Could not parse yEnd." << endl;
+      return;
+    }
+
+    double yStep;
+    if(!parseDouble(args[2], &yStep)) {
+      cerr << "Could not parse yStep." << endl;
+      return;
+    }
+
+    auto autoY = MicroscopeAutoY::open(connections, yEnd, yStep);
+    if(!autoY) {
+      cerr << "Could not start auto-Y procedure." << endl;
+      return;
+    }
+
+    autoY->startTicked(connections->tickers);
+    connections->microscopeAutoY = std::move(autoY);
+  } else if(args[0] == "stop") {
+    if(connections->printer) {
+      connections->printer->write(input, strlen(input));
+      connections->printer->write("\r\n", 2);
+    }
+
+    if(connections->microscopeAutofocus) {
+      connections->microscopeAutofocus->stopTicked(connections->tickers);
+      connections->microscopeAutofocus.reset();
+    }
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));
     connections->printer->write("\r\n", 2);
   } else {
     cerr << "Printer not yet connected, dropping unknown command." << endl;
   }
+}
+
+void Terminal::write(const char *buf) {
+  write(buf, strlen(buf));
 }
 
 void Terminal::write(const char *buf, int len) {

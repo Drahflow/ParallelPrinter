@@ -3,6 +3,10 @@
 #include "terminal.h"
 #include "current_position.h"
 #include "microscope_focus.h"
+#include "microscope_x_distance.h"
+#include "microscope_y_distance.h"
+#include "time.h"
+#include "tickable.h"
 
 #include <iostream>
 #include <cerrno>
@@ -50,11 +54,15 @@
 
 using namespace std;
 
+uint64_t runMainLoopUntil = ~0ull;
+
 int main(void) {
   Connections connections;
   if(!(connections.currentPosition = CurrentPosition::open(&connections))) return 1;
   if(!(connections.terminal = Terminal::open(&connections))) return 1;
   if(!(connections.microscopeFocus = MicroscopeFocus::open(&connections))) return 1;
+  if(!(connections.microscopeXDistance = MicroscopeXDistance::open(&connections))) return 1;
+  if(!(connections.microscopeYDistance = MicroscopeYDistance::open(&connections))) return 1;
 
   int epoll = epoll_create(8);
   if(epoll == -1) {
@@ -65,7 +73,7 @@ int main(void) {
   connections.epollFd = epoll;
   if(!connections.terminal->addToEpoll(epoll)) return 1;
 
-  while(true) {
+  while(now() < runMainLoopUntil) {
     constexpr int eventCount = 8;
     struct epoll_event events[eventCount];
     int ret = epoll_wait(epoll, events, eventCount, 1);
@@ -77,6 +85,8 @@ int main(void) {
     for(int i = 0; i < ret; ++i) {
       reinterpret_cast<Epollable *>(events[i].data.ptr)->available();
     }
+
+    for(auto todo = connections.tickers; auto &t: todo) t->tick();
   }
 
   {

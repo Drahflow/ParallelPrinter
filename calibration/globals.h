@@ -5,4 +5,7 @@ constexpr int videoWidth = 640;
 constexpr int videoHeight = 480;
 constexpr int mainAxisCount = 7;
 
+// #define DEBUG_INTERCEPTIONS
+// #define DEBUG_FRAMETIMINGS
+
 #endif

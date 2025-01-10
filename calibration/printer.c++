@@ -3,6 +3,7 @@
 #include "connections.h"
 #include "terminal.h"
 #include "current_position.h"
+#include "globals.h"
 
 #include <iostream>
 #include <cstring>
@@ -88,7 +89,9 @@ void Printer::parsePrinterReply(const char *buffer, int len) {
 
   for(char *c = lineBuffer; c < lineBufferEnd; ++c) {
     if(*c == '\n') {
+#ifdef DEBUG_INTERCEPTIONS
       cout << "Line from printer: " << string(lineBuffer, c - lineBuffer) << flush;
+#endif
       char *lineEnd = c;
       if(lineEnd > lineBuffer && *(lineEnd - 1) == '\r') --lineEnd;
 
@@ -102,9 +105,11 @@ void Printer::parsePrinterReply(const char *buffer, int len) {
       }
       args.push_back(string(start, i - start));
 
-      cerr << "Intercepted from printer: ";
+#ifdef DEBUG_INTERCEPTIONS
+      cerr << "Intercepted from printer:";
       for(auto &i: args) cerr << " " << i;
       cerr << endl;
+#endif
 
       if(connections->currentPosition) connections->currentPosition->parsePrinterReply(args);
 
@@ -145,9 +150,11 @@ void Printer::write(const char *buf, int len) {
   }
   args.push_back(string(start, i - start));
 
-  cerr << "Intercepted to printer: ";
+#ifdef DEBUG_INTERCEPTIONS
+  cerr << "Intercepted to printer:";
   for(auto &i: args) cerr << " " << i;
   cerr << endl;
+#endif
 
   if(connections->currentPosition) connections->currentPosition->parsePrinterCommand(args);
 

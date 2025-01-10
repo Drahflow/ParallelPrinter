@@ -23,6 +23,7 @@ class Terminal: public Epollable {
     int getEpollFd() override;
     void available() override;
 
+    void write(const char *buf);
     void write(const char *buf, int len);
 };
 

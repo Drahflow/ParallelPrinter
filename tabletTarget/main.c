@@ -77,6 +77,16 @@ void handleInput(char *buffer) {
     return;
   }
 
+  if(!strcmp(buffer, "off")) {
+    setBacklight(0 << 8);
+    return;
+  }
+
+  if(!strcmp(buffer, "on")) {
+    setBacklight(255 << 8);
+    return;
+  }
+
   int tx, ty;
   if(sscanf(buffer, "target %d %d", &tx, &ty) == 2) {
     for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
@@ -109,6 +119,64 @@ void handleInput(char *buffer) {
         p->a = 0;
       }
     }
+    return;
+  }
+
+  if(sscanf(buffer, "target:x %d", &tx) == 1) {
+    for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
+      for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        if(x == tx || x == tx + 1) {
+          g = 255;
+        }
+
+        rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);
+        p->r = r;
+        p->g = g;
+        p->b = b;
+        p->a = 0;
+      }
+    }
+    return;
+  }
+
+  if(sscanf(buffer, "target:y %d", &ty) == 1) {
+    for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
+      for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        if(y == ty || y == ty + 1) {
+          g = 255;
+        }
+
+        rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);
+        p->r = r;
+        p->g = g;
+        p->b = b;
+        p->a = 0;
+      }
+    }
+    return;
+  }
+
+  if(!strcmp(buffer, "target:focus")) {
+    for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
+      for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
+        int r = 255;
+        int g = 255;
+        int b = 255;
+
+        rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);
+        p->r = r;
+        p->g = g;
+        p->b = b;
+        p->a = 0;
+      }
+    }
+    return;
   }
 
   printf("Unknown command.\n");
