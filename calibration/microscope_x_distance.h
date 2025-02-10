@@ -15,7 +15,7 @@ class MicroscopeXDistance {
     Connections *connections;
     int64_t distance;
     int nextMeasurement;
-    std::array<uint64_t, 11> lastMeasurements;
+    std::array<uint64_t, 31> lastMeasurements;
 
     double xRangeBegin, xRangeEnd;
     std::array<uint64_t, 256> xRangePlot;

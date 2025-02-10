@@ -122,34 +122,21 @@ void handleInput(char *buffer) {
     return;
   }
 
-  if(sscanf(buffer, "target:x %d", &tx) == 1) {
+  if(sscanf(buffer, "target:xy %d %d", &tx, &ty) == 2) {
     for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
       for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
         int r = 0;
         int g = 0;
         int b = 0;
-        if(x == tx || x == tx + 1) {
+        if(x >= tx - 1 && x <= tx + 2 && y >= ty && y <= ty + 1) {
           g = 255;
         }
-
-        rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);
-        p->r = r;
-        p->g = g;
-        p->b = b;
-        p->a = 0;
-      }
-    }
-    return;
-  }
-
-  if(sscanf(buffer, "target:y %d", &ty) == 1) {
-    for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
-      for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
-        int r = 0;
-        int g = 0;
-        int b = 0;
-        if(y == ty || y == ty + 1) {
+        if(x >= tx && x <= tx + 1 && y >= ty - 1 && y <= ty + 2) {
           g = 255;
+        }
+        if(x >= tx && x <= tx + 1 && y >= ty && y <= ty + 1) {
+          r = 255;
+          b = 255;
         }
 
         rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);

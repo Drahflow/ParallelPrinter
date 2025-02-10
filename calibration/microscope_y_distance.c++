@@ -41,7 +41,9 @@ void MicroscopeYDistance::evaluate(VideoFrame *frame) {
 
   auto tmp = lastMeasurements;
   ranges::sort(tmp);
-  uint64_t absDistance = llabs(tmp[lastMeasurements.size() / 2 + 1]);
+
+  distance = tmp[lastMeasurements.size() / 2 + 1];
+  uint64_t absDistance = llabs(distance);
 
   if(connections->currentPosition) {
     auto pos = connections->currentPosition->readPrinter();
@@ -52,7 +54,7 @@ void MicroscopeYDistance::evaluate(VideoFrame *frame) {
       }
 
       if(yRangeBegin < yRangeEnd) {
-        int index = (pos->disp.x - yRangeBegin) / (yRangeEnd - yRangeBegin) * yRangePlot.size();
+        int index = (pos->disp.y - yRangeBegin) / (yRangeEnd - yRangeBegin) * yRangePlot.size();
         if(index >= 0 && index < (int)yRangePlot.size()) {
           if(absDistance < yRangePlot[index]) yRangePlot[index] = absDistance;
         }
@@ -79,7 +81,7 @@ void MicroscopeYDistance::render(VideoFrame *frame) {
   if(yRangeBegin < yRangeEnd) {
     for(unsigned int i = 0; i < yRangePlot.size(); ++i) {
       if(yRangePlot[i] < LARGE) {
-        int y = 50 + yRangePlot[i] / 1024 ;
+        int y = 50 + yRangePlot[i] / 128;
         if(y > 50 && y < videoHeight) {
           frame->setPixel(200 + i, y);
         }
