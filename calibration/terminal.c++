@@ -16,6 +16,7 @@
 #include "microscope_autofocus.h"
 #include "microscope_auto_x.h"
 #include "microscope_auto_y.h"
+#include "microscope_auto_xyz.h"
 
 #include <iostream>
 #include <cstring>
@@ -229,7 +230,7 @@ void Terminal::parse(const char *input) {
 
     connections->microscopeYDistance->reset();
   } else if(args[0] == "y-dist:auto") {
-    if(!connections->microscopeXDistance) {
+    if(!connections->microscopeYDistance) {
       cerr << "Microscope y distance not setup." << endl;
       return;
     }
@@ -254,6 +255,48 @@ void Terminal::parse(const char *input) {
 
     autoY->startTicked(connections->tickers);
     connections->microscopeAutoY = std::move(autoY);
+  } else if(args[0] == "xyz:auto") {
+    if(!connections->microscopeXDistance) {
+      cerr << "Microscope x distance not setup." << endl;
+      return;
+    }
+
+    if(!connections->microscopeYDistance) {
+      cerr << "Microscope y distance not setup." << endl;
+      return;
+    }
+
+    if(!connections->microscopeFocus) {
+      cerr << "Microscope focus not setup." << endl;
+      return;
+    }
+
+    double scaleFactor;
+    if(!parseDouble(args[1], &scaleFactor)) {
+      cerr << "Could not parse scaleFactor." << endl;
+      return;
+    }
+
+    double precision;
+    if(!parseDouble(args[2], &precision)) {
+      cerr << "Could not parse precision." << endl;
+      return;
+    }
+
+    double focusSpread;
+    if(!parseDouble(args[3], &focusSpread)) {
+      cerr << "Could not focus spread." << endl;
+      return;
+    }
+
+    auto autoXYZ = MicroscopeAutoXYZ::open(connections, scaleFactor, precision, focusSpread);
+    if(!autoXYZ) {
+      cerr << "Could not start auto-XYZ procedure." << endl;
+      return;
+    }
+
+    autoXYZ->startTicked(connections->tickers);
+    connections->microscopeAutoXYZ = std::move(autoXYZ);
   } else if(args[0] == "stop") {
     if(connections->printer) {
       connections->printer->write(input, strlen(input));
@@ -263,6 +306,21 @@ void Terminal::parse(const char *input) {
     if(connections->microscopeAutofocus) {
       connections->microscopeAutofocus->stopTicked(connections->tickers);
       connections->microscopeAutofocus.reset();
+    }
+
+    if(connections->microscopeAutoX) {
+      connections->microscopeAutoX->stopTicked(connections->tickers);
+      connections->microscopeAutoX.reset();
+    }
+
+    if(connections->microscopeAutoY) {
+      connections->microscopeAutoY->stopTicked(connections->tickers);
+      connections->microscopeAutoY.reset();
+    }
+
+    if(connections->microscopeAutoXYZ) {
+      connections->microscopeAutoXYZ->stopTicked(connections->tickers);
+      connections->microscopeAutoXYZ.reset();
     }
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));
@@ -274,6 +332,10 @@ void Terminal::parse(const char *input) {
 
 void Terminal::write(const char *buf) {
   write(buf, strlen(buf));
+}
+
+void Terminal::write(const string &str) {
+  write(str.data(), str.length());
 }
 
 void Terminal::write(const char *buf, int len) {

@@ -128,7 +128,10 @@ config:motor 6 256 16
 
 kinematics:again
 
-config:kinematics:slider:zero 6 300 -27 -167.8
+config:kinematics:slider:zero 2 -100 -27 -118.5
+config:kinematics:slider:zero 3 0 -27 -149.8
+config:kinematics:slider:zero 4 100 -27 -120.5
+config:kinematics:slider:zero 6 300 -27 -168.8
 
 kinematics:again
 
@@ -159,13 +162,6 @@ tool:move 240 185.0 -635 1 0 0 0
 tool:move 240 195.0 -635 1 0 0 0
 tool:move 240 205.0 -635 1 0 0 0
 
-config:kinematics:slider:zero 2 -100 -27 -118.5
-config:kinematics:slider:zero 3 0 -27 -149.8
-config:kinematics:slider:zero 4 100 -27 -120.5
-config:kinematics:slider:zero 6 300 -27 -168.8
-
-kinematics:again
-
 # extend forward, another 5cm
 tool:move 240 215.0 -635 1 0 0 0
 tool:move 240 225.0 -635 1 0 0 0
@@ -174,61 +170,38 @@ tool:move 240 245.0 -635 1 0 0 0
 tool:move 240 255.0 -635 1 0 0 0
 
 # reaching tablet
-tool:move 240 300.0 -635 1 0 0 0
-tool:move 240 350.0 -635 1 0 0 0
-tool:move 240 350.0 -700 1 0 0 0
 tool:move 240 350.0 -750 1 0 0 0
-tool:move 240 350.0 -780 1 0 0 0
-tool:move 240 350.0 -790 1 0 0 0
-tool:move 260 350.0 -790 1 0 0 0
-tool:move 300 350.0 -790 1 0 0 0
-tool:move 340 350.0 -790 1 0 0 0
+tool:move 340 390.0 -780 1 0 0 0
 tool:move 340 390.0 -790 1 0 0 0
-tool:move 340 390.0 -800 1 0 0 0
-tool:move 340 390.0 -801 1 0 0 0
-tool:move 340 391.0 -801 1 0 0 0
-tool:move 340 392.0 -801 1 0 0 0
-tool:move 340 392.2 -801 1 0 0 0
-tool:move 340.5 392.2 -801 1 0 0 0
-tool:move 341 392.2 -801 1 0 0 0
-tool:move 342 392 -801 1 0 0 0
-tool:move 350 391.8 -801.4 1 0 0 0
-tool:move 355 391.6 -801.6 1 0 0 0
-tool:move 360 391.4 -801.8 1 0 0 0
-tool:move 365 391.2 -802.0 1 0 0 0
-tool:move 370 391.0 -802.2 1 0 0 0
-tool:move 375 390.8 -802.4 1 0 0 0
-tool:move 380 390.6 -802.7 1 0 0 0
-tool:move 385 390.4 -802.9 1 0 0 0
-tool:move 390 390.2 -803.2 1 0 0 0
-tool:move 391 390.2 -803.2 1 0 0 0
-tool:move 391 390.0 -803.2 1 0 0 0
-tool:move 391 390.0 -803.25 1 0 0 0
+tool:move 340 390.0 -795 1 0 0 0
+tool:move 340 390.0 -796 1 0 0 0
+tool:move 360 390.0 -796 1 0 0 0
+tool:move 360 390.0 -796.5 1 0 0 0
+tool:move 365 392.0 -796.5 1 0 0 0
+tool:move 370 394.0 -796.5 1 0 0 0
+tool:move 375 396.0 -796.5 1 0 0 0
+tool:move 380 395.0 -796.5 1 0 0 0
+tool:move 380 395.0 -798.4 1 0 0 0
+tool:move 390.130 393.688 -799.1 1 0 0 0
 
-tool:speed:movement 0.02
-tool:move 391 390.0 -803.275 1 0 0 0
-tool:move 391 390.0 -803.285 1 0 0 0
-tool:move 391 390.0 -803.290 1 0 0 0
-tool:move 391 390.0 -803.295 1 0 0 0
-tool:move 391 390.0 -803.300 1 0 0 0
-tool:move 391 390.0 -803.292 1 0 0 0
-tool:move 392 390.0 -803.288 1 0 0 0
-tool:move 392 389.9 -803.288 1 0 0 0
-tool:move 392 389.9 -803.000 1 0 0 0
-tool:move 392 390.0 -802.950 1 0 0 0
-focus:auto -803.6 0.05
-tool:move 392 390.0 -803.200 1 0 0 0
-focus:auto -803.35 0.005
-tool:move 392 390.0 -803.240 1 0 0 0
-focus:auto -803.26 0.001
-tool:speed:movement 0.001
-tool:move 392 390.0 -803.249 1 0 0 0
-focus:auto -803.26 0.0001
+tablet target:xy 20 20
+xyz:auto 0.00000002 0.001 0.005
 
-tool:speed:movement 0.002
-tool:move 392 390.0 -803.241 1 0 0 0
-focus:auto -803.249 0.0001
+tool:speed:movement 0.1
+tool:move 390.1329 393.7747 -799.1028 1 0 0 0
+xyz:auto 0.00000002 0.001 0.005
+xyz:auto 0.00000002 0.001 0.005
 
+tool:speed:movement 0.1
+tablet target:xy 20 20
+tool:move 390.1362695000004 393.8107527000004 -799.09 1 0 0 0
+xyz:auto 0.00000002 0.001 0.002
+
+tablet target:xy 21 20
+xyz:auto 0.00000002 0.001 0.002
+
+
+# return
 tool:speed:movement 3
 tool:move 392 390.0 -750 1 0 0 0
 tool:move 240 390.0 -750 1 0 0 0

@@ -149,12 +149,17 @@ void handleInput(char *buffer) {
     return;
   }
 
-  if(!strcmp(buffer, "target:focus")) {
+  if(sscanf(buffer, "target:xy:focus %d %d", &tx, &ty) == 2) {
     for(int y = 0; y < FRAMEBUFFER_HEIGHT; ++y) {
       for(int x = 0; x < FRAMEBUFFER_WIDTH; ++x) {
-        int r = 255;
-        int g = 255;
-        int b = 255;
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        if(x >= tx - 1 && x <= tx + 2 && y >= ty && y <= ty + 1) {
+          r = 255;
+          g = 255;
+          b = 255;
+        }
 
         rgba *p = framebuffer + (FRAMEBUFFER_WIDTH * y + x);
         p->r = r;

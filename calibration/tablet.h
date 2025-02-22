@@ -21,6 +21,8 @@ class Tablet: public Epollable {
     void available() override;
 
     void write(const char *buf, int len);
+    void setTarget(int x, int y);
+    void setFocusTarget(int x, int y);
 };
 
 #endif

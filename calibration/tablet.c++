@@ -9,6 +9,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <sstream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -177,4 +178,22 @@ void Tablet::write(const char *buf, int len) {
     buf += ret;
     len -= ret;
   }
+}
+
+void Tablet::setTarget(int x, int y) {
+  ostringstream command;
+  command << "target:xy " << x << " " << y << "\n";
+  auto cmdStr = command.str();
+
+  if(connections->terminal) connections->terminal->write(cmdStr.data(), cmdStr.size());
+  write(cmdStr.data(), cmdStr.size());
+}
+
+void Tablet::setFocusTarget(int x, int y) {
+  ostringstream command;
+  command << "target:xy:focus " << x << " " << y << "\n";
+  auto cmdStr = command.str();
+
+  if(connections->terminal) connections->terminal->write(cmdStr.data(), cmdStr.size());
+  write(cmdStr.data(), cmdStr.size());
 }

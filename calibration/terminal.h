@@ -4,6 +4,7 @@
 #include "epollable.h"
 
 #include <memory>
+#include <string>
 
 struct Connections;
 
@@ -25,6 +26,7 @@ class Terminal: public Epollable {
 
     void write(const char *buf);
     void write(const char *buf, int len);
+    void write(const std::string &);
 };
 
 #endif

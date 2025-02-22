@@ -7,6 +7,7 @@
 #include <string>
 
 class Connections;
+struct Position;
 
 class Printer: public Epollable {
   private:
@@ -26,6 +27,7 @@ class Printer: public Epollable {
     void available() override;
 
     void write(const char *buf, int len);
+    void moveTo(const Position &);
 };
 
 #endif

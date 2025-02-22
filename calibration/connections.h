@@ -17,6 +17,7 @@ class MicroscopeXDistance;
 class MicroscopeAutoX;
 class MicroscopeYDistance;
 class MicroscopeAutoY;
+class MicroscopeAutoXYZ;
 class Tickable;
 
 struct Connections {
@@ -39,6 +40,7 @@ struct Connections {
   std::unique_ptr<MicroscopeAutoX> microscopeAutoX;
   std::unique_ptr<MicroscopeYDistance> microscopeYDistance;
   std::unique_ptr<MicroscopeAutoY> microscopeAutoY;
+  std::unique_ptr<MicroscopeAutoXYZ> microscopeAutoXYZ;
 };
 
 #endif

@@ -4,8 +4,11 @@
 #include "terminal.h"
 #include "current_position.h"
 #include "globals.h"
+#include "geometry.h"
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <cstring>
 #include <vector>
 
@@ -168,4 +171,21 @@ void Printer::write(const char *buf, int len) {
     buf += ret;
     len -= ret;
   }
+}
+
+void Printer::moveTo(const Position &pos) {
+  ostringstream command;
+  command << setprecision(10)
+    << "tool:move " << pos.disp.x
+    << " " << pos.disp.y
+    << " " << pos.disp.z
+    << " " << pos.rot.r
+    << " " << pos.rot.i
+    << " " << pos.rot.j
+    << " " << pos.rot.k
+    << "\r\n";
+  auto cmdStr = command.str();
+
+  if(connections->terminal) connections->terminal->write(cmdStr.data(), cmdStr.size());
+  write(cmdStr.data(), cmdStr.size());
 }

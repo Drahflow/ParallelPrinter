@@ -65,7 +65,7 @@ void CurrentPosition::parsePrinterReply(const vector<string> &args) {
 }
 
 void CurrentPosition::parseTabletCommand(const vector<string> &args) {
-  if(args[0] == "target") {
+  if(args[0] == "target" || args[0] == "target:xy" || args[0] == "target:xy:focus") {
     double x, y;
 
     if(!(

@@ -31,6 +31,7 @@ class MicroscopeFocus {
     void reset();
     void enableRangePlot(double begin, double end);
 
+    auto readFocus() const -> auto { return focus; }
     auto readBestPosition() const -> auto { return bestPosition; }
 };
 

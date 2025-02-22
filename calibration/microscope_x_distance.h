@@ -31,6 +31,7 @@ class MicroscopeXDistance {
     void reset();
     void enableRangePlot(double begin, double end);
 
+    auto readDistance() const -> auto { return distance; }
     auto readBestPosition() const -> auto { return bestPosition; }
 };
 
