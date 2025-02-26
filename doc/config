@@ -126,8 +126,6 @@ config:motor 4 256 16
 config:motor 5 256 16
 config:motor 6 256 16
 
-kinematics:again
-
 config:kinematics:slider:zero 2 -100 -27 -118.5
 config:kinematics:slider:zero 3 0 -27 -149.8
 config:kinematics:slider:zero 4 100 -27 -120.5
@@ -178,28 +176,31 @@ tool:move 340 390.0 -796 1 0 0 0
 tool:move 360 390.0 -796 1 0 0 0
 tool:move 360 390.0 -796.5 1 0 0 0
 tool:move 365 392.0 -796.5 1 0 0 0
-tool:move 370 394.0 -796.5 1 0 0 0
-tool:move 375 396.0 -796.5 1 0 0 0
-tool:move 380 395.0 -796.5 1 0 0 0
-tool:move 380 395.0 -798.4 1 0 0 0
-tool:move 390.130 393.688 -799.1 1 0 0 0
+tool:move 370 391.0 -796.5 1 0 0 0
+tool:move 375 390.0 -796.5 1 0 0 0
+tool:move 400 390.0 -796.5 1 0 0 0
+tool:move 399.5 388.0 -799 1 0 0 0
+tool:move 399.003672 388.458271 -799.200000 1 0 0 0
 
+tool:speed:movement 0.2
 tablet target:xy 20 20
-xyz:auto 0.00000002 0.001 0.005
+xyz:auto 0.00000003 0.001 0.25 5000
 
-tool:speed:movement 0.1
-tool:move 390.1329 393.7747 -799.1028 1 0 0 0
-xyz:auto 0.00000002 0.001 0.005
-xyz:auto 0.00000002 0.001 0.005
+tablet target:xy 22 20
+xyz:auto 0.00000003 0.01 0.1 2000
 
-tool:speed:movement 0.1
-tablet target:xy 20 20
-tool:move 390.1362695000004 393.8107527000004 -799.09 1 0 0 0
-xyz:auto 0.00000002 0.001 0.002
+tablet target:xy 24 20
+xyz:auto 0.00000003 0.01 0.1 2000
 
-tablet target:xy 21 20
-xyz:auto 0.00000002 0.001 0.002
+tablet target:xy 26 20
+xyz:auto 0.00000003 0.01 0.1 2000
 
+tablet target:xy 28 20
+xyz:auto 0.00000003 0.01 0.1 2000
+
+tablet target:xy 30 20
+xyz:auto 0.00000003 0.001 0.1 5000
+xyz:auto 0.00000003 0.001 0.0 5000
 
 # return
 tool:speed:movement 3
@@ -207,7 +208,9 @@ tool:move 392 390.0 -750 1 0 0 0
 tool:move 240 390.0 -750 1 0 0 0
 tool:move 240 390.0 -635 1 0 0 0
 tool:move 240 250.0 -635 1 0 0 0
+config:kinematics:limit:steps_per_second 30000
+config:kinematics:limit:steps_per_second 40000
+config:kinematics:limit:steps_per_second 20000
 
 tool:speed:movement 1
 tool:move 240 155.0 -635 1 0 0 0
-tool:move 240 105.0 -635 1 0 0 0

@@ -285,11 +285,17 @@ void Terminal::parse(const char *input) {
 
     double focusSpread;
     if(!parseDouble(args[3], &focusSpread)) {
-      cerr << "Could not focus spread." << endl;
+      cerr << "Could not parse focus spread." << endl;
       return;
     }
 
-    auto autoXYZ = MicroscopeAutoXYZ::open(connections, scaleFactor, precision, focusSpread);
+    double settleTime; // input as ms, used as ns
+    if(!parseDouble(args[4], &settleTime)) {
+      cerr << "Could not parse settle time." << endl;
+      return;
+    }
+
+    auto autoXYZ = MicroscopeAutoXYZ::open(connections, scaleFactor, precision, focusSpread, settleTime * 1'000'000);
     if(!autoXYZ) {
       cerr << "Could not start auto-XYZ procedure." << endl;
       return;

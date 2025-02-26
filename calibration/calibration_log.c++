@@ -3,12 +3,16 @@
 #include "connections.h"
 #include "terminal.h"
 #include "current_position.h"
+#include "microscope_focus.h"
+#include "microscope_x_distance.h"
+#include "microscope_y_distance.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <unistd.h>
 
@@ -82,12 +86,24 @@ void CalibrationLog::writeCurrentPosition() {
   }
 
   ostringstream lineBuf;
+  lineBuf << setprecision(10);
   lineBuf << "Placement " << tabletPlacement << " ";
   lineBuf << "Target " << target->x << " " << target->y << " ";
   lineBuf << "Steps";
   for(int i = 0; i < mainAxisCount; ++i) {
     lineBuf << " " << steps->counts[i];
   }
+
+  if(connections->microscopeXDistance) {
+    lineBuf << " XDist " << connections->microscopeXDistance->readDistance();
+  }
+  if(connections->microscopeYDistance) {
+    lineBuf << " YDist " << connections->microscopeYDistance->readDistance();
+  }
+  if(connections->microscopeFocus) {
+    lineBuf << " Focus " << connections->microscopeFocus->readFocus();
+  }
+
   lineBuf << "\n";
 
   auto line = lineBuf.str();
