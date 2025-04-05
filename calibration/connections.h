@@ -19,6 +19,7 @@ class MicroscopeYDistance;
 class MicroscopeAutoY;
 class MicroscopeAutoXYZ;
 class Tickable;
+class MeasureGrid;
 
 struct Connections {
   int epollFd;
@@ -41,6 +42,7 @@ struct Connections {
   std::unique_ptr<MicroscopeYDistance> microscopeYDistance;
   std::unique_ptr<MicroscopeAutoY> microscopeAutoY;
   std::unique_ptr<MicroscopeAutoXYZ> microscopeAutoXYZ;
+  std::unique_ptr<MeasureGrid> measureGrid;
 };
 
 #endif

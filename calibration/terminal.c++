@@ -17,6 +17,7 @@
 #include "microscope_auto_x.h"
 #include "microscope_auto_y.h"
 #include "microscope_auto_xyz.h"
+#include "measure_grid.h"
 
 #include <iostream>
 #include <cstring>
@@ -303,6 +304,94 @@ void Terminal::parse(const char *input) {
 
     autoXYZ->startTicked(connections->tickers);
     connections->microscopeAutoXYZ = std::move(autoXYZ);
+  } else if(args[0] == "measure:grid") {
+    if(!connections->microscopeXDistance) {
+      cerr << "Microscope x distance not setup." << endl;
+      return;
+    }
+
+    if(!connections->microscopeYDistance) {
+      cerr << "Microscope y distance not setup." << endl;
+      return;
+    }
+
+    if(!connections->microscopeFocus) {
+      cerr << "Microscope focus not setup." << endl;
+      return;
+    }
+
+    double xStep, yStep, xEnd, yEnd;
+    double scaleFactor;
+    double coarsePrecision, coarseFocusSpread, coarseSettleTime;
+    double finePrecision, fineFocusSpread, fineSettleTime;
+
+    if(!parseDouble(args[1], &xStep)) {
+      cerr << "Could not parse xStep." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[2], &yStep)) {
+      cerr << "Could not parse yStep." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[3], &xEnd)) {
+      cerr << "Could not parse xEnd." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[4], &yEnd)) {
+      cerr << "Could not parse yEnd." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[5], &scaleFactor)) {
+      cerr << "Could not parse scaleFactor." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[6], &coarsePrecision)) {
+      cerr << "Could not parse coarsePrecision." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[7], &coarseFocusSpread)) {
+      cerr << "Could not parse coarseFocusSpread." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[8], &coarseSettleTime)) {
+      cerr << "Could not parse coarseSettleTime." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[9], &finePrecision)) {
+      cerr << "Could not parse finePrecision." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[10], &fineFocusSpread)) {
+      cerr << "Could not parse fineFocusSpread." << endl;
+      return;
+    }
+
+    if(!parseDouble(args[11], &fineSettleTime)) {
+      cerr << "Could not parse fineSettleTime." << endl;
+      return;
+    }
+
+    auto measureGrid = MeasureGrid::open(connections,
+        xStep, yStep, xEnd, yEnd,
+        scaleFactor,
+        coarsePrecision, coarseFocusSpread, coarseSettleTime * 1'000'000,
+        finePrecision, fineFocusSpread, fineSettleTime * 1'000'000);
+    if(!measureGrid) {
+      cerr << "Could not start grid measurement." << endl;
+      return;
+    }
+
+    measureGrid->startTicked(connections->tickers);
+    connections->measureGrid = std::move(measureGrid);
   } else if(args[0] == "stop") {
     if(connections->printer) {
       connections->printer->write(input, strlen(input));
@@ -327,6 +416,11 @@ void Terminal::parse(const char *input) {
     if(connections->microscopeAutoXYZ) {
       connections->microscopeAutoXYZ->stopTicked(connections->tickers);
       connections->microscopeAutoXYZ.reset();
+    }
+
+    if(connections->measureGrid) {
+      connections->measureGrid->stopTicked(connections->tickers);
+      connections->measureGrid.reset();
     }
   } else if(connections->printer) {
     connections->printer->write(input, strlen(input));

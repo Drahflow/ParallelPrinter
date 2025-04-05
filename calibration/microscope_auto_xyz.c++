@@ -21,7 +21,8 @@ using namespace std;
 
 constexpr int FIRST_XY = 1;
 constexpr int FIRST_Z = 2;
-constexpr int LAST_MOVE = 3;
+constexpr int SECOND_XY = 3;
+constexpr int DONE = 4;
 
 unique_ptr<MicroscopeAutoXYZ> MicroscopeAutoXYZ::open(Connections *connections,
     double scaleFactor, double precision, double focusSpread, double settleTime) {
@@ -91,7 +92,7 @@ void MicroscopeAutoXYZ::tick() {
     return;
   }
 
-  if(state == FIRST_XY) {
+  if(state == FIRST_XY || state == SECOND_XY) {
     double dx = connections->microscopeXDistance->readDistance() * scaleFactor;
     double dy = connections->microscopeYDistance->readDistance() * scaleFactor;
     if(connections->terminal) {
@@ -108,6 +109,15 @@ void MicroscopeAutoXYZ::tick() {
 
     if(dx * dx + dy * dy < precision * precision) {
       connections->terminal->write("X/Y complete.\n");
+
+      if(state == SECOND_XY) {
+        string statusCmd("status:steps\r\n");
+        connections->printer->write(statusCmd.data(), statusCmd.size());
+        connections->terminal->write("XYZ complete.\n");
+        stopTicked(connections->tickers);
+        state = DONE;
+        return;
+      }
 
       state = FIRST_Z;
       focusStep = focusSpread * 2 / 14;
@@ -175,15 +185,38 @@ void MicroscopeAutoXYZ::tick() {
 
     focusStep /= 2;
     if(focusStep < precision) {
-      connections->terminal->write("Z complete.\n");
+      if(focusMeasurements[0].data > 30'000'000) {
+        connections->terminal->write("Z complete.\n");
 
-      auto newPos = *pos;
-      newPos.disp.z = focusMeasurements[0].position;
-      focusTargetIndex = -1;
+        auto newPos = *pos;
+        newPos.disp.z = focusMeasurements[0].position;
+        focusTargetIndex = -1;
 
-      connections->printer->moveTo(newPos);
-      nextStep = now() + settleTime;
-      state = LAST_MOVE;
+        connections->printer->moveTo(newPos);
+        nextStep = now() + settleTime;
+        state = SECOND_XY;
+      } else if(focusMeasurements[0].data < 100'000) {
+        cerr << "Focus lost. Aborting." << endl;
+        stopTicked(connections->tickers);
+        return;
+      } else {
+        connections->terminal->write("Z complete, but focus seems bad.\n");
+
+        double startZ = focusMeasurements[0].position;
+        double largerFocusSpread = focusSpread * 2;
+
+        focusStep = largerFocusSpread * 2 / 14;
+        for(int i = 0; i < 15; ++i) {
+          focusMeasurements[i] = FocusMeasurement{
+            .position = (startZ - largerFocusSpread) + focusStep * i,
+            .data = ~0ull,
+          };
+        }
+        focusTargetIndex = -1;
+
+        connections->tablet->setFocusTarget(target->x, target->y);
+        nextStep = now() + 100'000'000;
+      }
       return;
     }
 
@@ -231,11 +264,9 @@ void MicroscopeAutoXYZ::tick() {
     return;
   }
 
-  if(state == LAST_MOVE) {
-    connections->terminal->write("XYZ complete.\n");
-    stopTicked(connections->tickers);
-    return;
-  }
-
   assert(false);
+}
+
+bool MicroscopeAutoXYZ::done() const {
+  return state == DONE;
 }

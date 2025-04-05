@@ -33,6 +33,8 @@ class MicroscopeAutoXYZ: public Tickable {
         Connections *, double scaleFactor, double precision, double focusSpread, double settleTime);
 
     void tick() override;
+
+    bool done() const;
 };
 
 #endif

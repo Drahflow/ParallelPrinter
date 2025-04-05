@@ -13,6 +13,7 @@
 #include "microscope_y_distance.h"
 #include "microscope_auto_y.h"
 #include "microscope_auto_xyz.h"
+#include "measure_grid.h"
 
 Connections::Connections() = default;
 Connections::~Connections() = default;
