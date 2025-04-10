@@ -392,6 +392,20 @@ void Terminal::parse(const char *input) {
 
     measureGrid->startTicked(connections->tickers);
     connections->measureGrid = std::move(measureGrid);
+  } else if(args[0] == "measure:grid:pause") {
+    if(!connections->measureGrid) {
+      cerr << "No grid measurement ongoing." << endl;
+      return;
+    }
+
+    connections->measureGrid->stopTicked(connections->tickers);
+  } else if(args[0] == "measure:grid:unpause") {
+    if(!connections->measureGrid) {
+      cerr << "No grid measurement ongoing." << endl;
+      return;
+    }
+
+    connections->measureGrid->startTicked(connections->tickers);
   } else if(args[0] == "stop") {
     if(connections->printer) {
       connections->printer->write(input, strlen(input));
