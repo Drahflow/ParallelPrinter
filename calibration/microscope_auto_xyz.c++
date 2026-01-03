@@ -195,27 +195,10 @@ void MicroscopeAutoXYZ::tick() {
         connections->printer->moveTo(newPos);
         nextStep = now() + settleTime;
         state = SECOND_XY;
-      } else if(focusMeasurements[0].data < 100'000) {
+      } else {
         cerr << "Focus lost. Aborting." << endl;
         stopTicked(connections->tickers);
         return;
-      } else {
-        connections->terminal->write("Z complete, but focus seems bad.\n");
-
-        double startZ = focusMeasurements[0].position;
-        double largerFocusSpread = focusSpread * 2;
-
-        focusStep = largerFocusSpread * 2 / 14;
-        for(int i = 0; i < 15; ++i) {
-          focusMeasurements[i] = FocusMeasurement{
-            .position = (startZ - largerFocusSpread) + focusStep * i,
-            .data = ~0ull,
-          };
-        }
-        focusTargetIndex = -1;
-
-        connections->tablet->setFocusTarget(target->x, target->y);
-        nextStep = now() + 100'000'000;
       }
       return;
     }

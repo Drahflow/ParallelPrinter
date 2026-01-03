@@ -126,11 +126,6 @@ config:motor 4 256 16
 config:motor 5 256 16
 config:motor 6 256 16
 
-config:kinematics:slider:zero 2 -100 -27 -118.5
-config:kinematics:slider:zero 3 0 -27 -149.8
-config:kinematics:slider:zero 4 100 -27 -120.5
-config:kinematics:slider:zero 6 300 -27 -168.8
-
 kinematics:again
 
 # manual experiments
@@ -168,42 +163,30 @@ tool:move 240 245.0 -635 1 0 0 0
 tool:move 240 255.0 -635 1 0 0 0
 
 # reaching tablet
+tool:move 240 350.0 -700 1 0 0 0
 tool:move 240 350.0 -750 1 0 0 0
 tool:move 340 390.0 -780 1 0 0 0
 tool:move 340 390.0 -790 1 0 0 0
 tool:move 340 390.0 -795 1 0 0 0
-tool:move 340 390.0 -796 1 0 0 0
-tool:move 360 390.0 -796 1 0 0 0
-tool:move 360 390.0 -796.5 1 0 0 0
-tool:move 365 392.0 -796.5 1 0 0 0
-tool:move 370 391.0 -796.5 1 0 0 0
-tool:move 375 390.0 -796.5 1 0 0 0
-tool:move 400 390.0 -796.5 1 0 0 0
-tool:move 399.5 388.0 -799 1 0 0 0
-tool:move 399.003672 388.458271 -799.200000 1 0 0 0
+tool:move 340 390.0 -815 1 0 0 0
 
-tool:speed:movement 0.2
+log:comment 2025-04-15.2
+tool:speed:movement 0.15
 tablet target:xy 20 20
-xyz:auto 0.00000003 0.001 0.25 5000
+xyz:auto 0.00000002 0.02 0.3 2000
+xyz:auto 0.00000002 0.001 0.025 10000
+log:position
 
-tablet target:xy 22 20
-xyz:auto 0.00000003 0.01 0.1 2000
+measure:grid 20 20 220 220 0.00000002 0.01 0.3 2000 0.002 0.025 10000
+measure:grid:pause
+measure:grid:unpause
+xyz:auto 0.00000002 0.002 0.025 10000
 
-tablet target:xy 24 20
-xyz:auto 0.00000003 0.01 0.1 2000
-
-tablet target:xy 26 20
-xyz:auto 0.00000003 0.01 0.1 2000
-
-tablet target:xy 28 20
-xyz:auto 0.00000003 0.01 0.1 2000
-
-tablet target:xy 30 20
-xyz:auto 0.00000003 0.001 0.1 5000
-xyz:auto 0.00000003 0.001 0.0 5000
+tool:move 378.6 372.11 -814.05 1 0 0 0
+xyz:auto 0.00000002 0.02 0.25 5000
 
 # return
-tool:speed:movement 3
+tool:speed:movement 5
 tool:move 392 390.0 -750 1 0 0 0
 tool:move 240 390.0 -750 1 0 0 0
 tool:move 240 390.0 -635 1 0 0 0

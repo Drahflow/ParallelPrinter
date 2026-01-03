@@ -399,6 +399,10 @@ void Terminal::parse(const char *input) {
     }
 
     connections->measureGrid->stopTicked(connections->tickers);
+
+    if(connections->microscopeAutoXYZ) {
+      connections->microscopeAutoXYZ->stopTicked(connections->tickers);
+    }
   } else if(args[0] == "measure:grid:unpause") {
     if(!connections->measureGrid) {
       cerr << "No grid measurement ongoing." << endl;
